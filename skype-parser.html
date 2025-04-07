@@ -140,6 +140,10 @@
       margin-bottom: 0;
       margin-bottom: 0;
     }
+    .message-body {
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
     div.author {
       color: #626f82;
       padding-bottom: .5rem;
@@ -369,6 +373,8 @@
       box-shadow: 2px 2px 10px 4px rgba(0, 0, 0, 0.1);
       max-width: 90%;
       width: fit-content;
+      white-space: pre-wrap;
+      word-break: break-all;
     }
     .redirect_icon {
       color: gray;
@@ -558,14 +564,20 @@
         e = p + (p.endsWith('\\') ? '' : '\\') + e;
         var m = document.createElement("div");
         m.className = "media-container";
-        m.innerHTML = '<span class="ext">(jpeg)</span><br>';
         
         // For images
         const img = new Image();
         img.src = e + '.jpeg';
         img.className = "jsonimg";
         img.setAttribute('onerror', `retryLoadMedia(this, '${e.replace(/\\/g, '\\\\')}', 3)`);
+        img.setAttribute('onload', 'this.title = this.src');
+        img.setAttribute('loading', 'lazy');
         m.appendChild(img);
+        
+        var span = document.createElement("span");
+        span.className = 'ext';
+        span.innerText = '(jpeg)';
+        m.appendChild(span);
         
         return m.outerHTML;
       }
@@ -893,15 +905,16 @@
             img.className = "imggif";
             img.src = imageUrl;
             img.setAttribute('onerror', `retryLoadImage(this, '${imageUrl}', 3)`);
-            
-            var span = document.createElement("span");
-            span.innerText = '(gif)';
+            img.setAttribute('onload', 'this.title = this.src');
+            img.setAttribute('loading', 'lazy');
             
             var div = document.createElement("div");
             div.className = "divgif";
-            div.appendChild(span);
-            div.appendChild(document.createElement("br"));
             div.appendChild(img);
+            
+            var span = document.createElement("span");
+            span.innerText = '(gif)';
+            div.appendChild(span);
             
             e = div.outerHTML;
             
