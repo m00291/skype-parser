@@ -306,6 +306,14 @@
       height: 80px;
       width: 80px;
     }
+    .imgerr {
+      max-width: 200px;
+      max-height: 20px;
+    }
+    .divimgerr {
+      display: flex;
+      flex-direction: column;
+    }
     .step-1.form ol li {
       margin-top: 10px;
       margin-bottom: 10px;
@@ -522,15 +530,17 @@
           imgElement.onerror = function () {
             retryLoadImage(imgElement, imageUrl, retries - 1);
           };
-        }, 1000); // 1 秒後重試
+        }, 100); // 0.1 秒後重試
       } else {
         //console.error("圖片載入失敗，已達最大重試次數:", imageUrl);
         
-        imgElement.parentNode.className = "";
-        imgElement.className = "";
-        
         var err = document.createElement("span");
         err.innerText = '(error 404)';
+        
+        imgElement.title = imageUrl;
+        imgElement.className = 'imgerr';
+        
+        imgElement.parentNode.className = "divimgerr";
         imgElement.parentElement.prepend(err);
       }
     }
@@ -563,6 +573,7 @@
       } else {
         //console.error("所有擴展名載入失敗:", extensions.join(", "));
         imgElement.parentElement.getElementsByClassName("ext")[0].innerHTML = '(mp4)';
+        retryLoadImage(imgElement, imageUrl + ".2.jpeg", maxRetries)
         imgElement.className = "jsonimg";
       }
     }
@@ -580,7 +591,6 @@
         img.className = "jsonimg";
         img.setAttribute('onerror', `retryLoadMedia(this, '${e.replace(/\\/g, '\\\\')}', 3)`);
         img.setAttribute('onload', 'this.title = this.src');
-        img.setAttribute('loading', 'lazy');
         m.appendChild(img);
         
         var span = document.createElement("span");
@@ -660,10 +670,12 @@
                 l.textContent = new Date(a[s].originalarrivaltime).toLocaleString("en-GB", { hour12: true }), o.appendChild(l);
                 var d = document.createElement("div");
                 d.className = "message-body";
+                
                 if (a[s].properties && "emotions" in a[s].properties) {
                   a[s].content += '<div class="emotions">' + JSON.stringify(a[s].properties) + '</div>';
                 }
-                d.innerHTML = a[s].amsreferences == null
+                
+                d.innerHTML = a[s].amsreferences == null || a[s].messagetype === "RichText/Media_GenericFile"
                             ? (a[s].properties && "forwardMetadata" in a[s].properties)
                             ? u("isForwarded:true" + a[s].content)
                             : u(a[s].content)
@@ -742,12 +754,14 @@
           const URIObjectnode = quote.getElementsByTagName("URIObject")[0];
           const v_doc_id = URIObjectnode.getAttribute("doc_id");
           
-          quote.removeChild(URIObjectnode);
-          
-          var tempDiv = document.createElement('div');
-          tempDiv.innerHTML = media(v_doc_id);
-          var newElement = tempDiv.firstChild;
-          quote.appendChild(newElement);
+          if (!URIObjectnode.getElementsByTagName("swift")) {
+            quote.removeChild(URIObjectnode);
+            
+            var tempDiv = document.createElement('div');
+            tempDiv.innerHTML = media(v_doc_id);
+            var newElement = tempDiv.firstChild;
+            quote.appendChild(newElement);
+          }
           
           e = doc.body.innerHTML;
         } catch(err) {}
@@ -757,11 +771,24 @@
           const URIObjecturi = URIObjectnode.getAttribute("uri");
           
           if ((URIObjectnode.innerHTML.includes("已傳送貼圖給您")) || (URIObjectnode.innerHTML.includes("A sticker was sent"))) {
+
+            var img = document.createElement("img");
+            img.className = "imgerr";
+            img.src = URIObjecturi;
+            img.title = URIObjecturi;
+            
+            var e = document.createElement("span");
+            e.innerHTML = '(error 404)';
             var m = document.createElement("span");
             m.innerHTML = '(sticker)';
-            m.setAttribute('url', URIObjecturi);
             
-            e = "<img title=" + URIObjecturi + " alt=\"(sticker)\"/>";
+            var d = document.createElement("div");
+            d.className = "divimgerr";
+            d.appendChild(e);
+            d.appendChild(img);
+            d.appendChild(m);
+            
+            e = d.outerHTML;
           }
         } catch(err) {}
         
@@ -809,6 +836,51 @@
             }
           }
         };
+
+        // 專門處理 Base64 解碼
+        var base64Regex = /b64="([^"]+)"/;
+        var match = base64Regex.exec(e);
+        
+        if (match && match[1]) {
+          var base64String = match[1];
+          var decodedContent = replacements.base64decode(base64String);
+          var imageUrl = JSON.parse(decodedContent).attachments[0].content.images[0].url;
+          
+          var div = document.createElement("div");
+          
+          try {
+            var img = document.createElement("img");
+            img.className = "imggif";
+            img.src = imageUrl;
+            img.setAttribute('onerror', `retryLoadImage(this, '${imageUrl}', 3)`);
+            img.setAttribute('onload', 'this.title = this.src');
+            
+            div.className = "divgif";
+            div.appendChild(img);
+            
+            var span = document.createElement("span");
+            span.innerText = '(gif)';
+            div.appendChild(span);
+            
+          } catch (error) {
+            console.error("解析 JSON 失敗:", error);
+            e = '<div>(decode base64 error)</div>';
+          }
+          
+          try {
+            const quote = doc.getElementsByTagName("quote")[0];
+            const URIObjectnode = quote.getElementsByTagName("URIObject")[0];
+            
+            if (URIObjectnode.getElementsByTagName("swift")) {
+              quote.removeChild(URIObjectnode);
+              quote.appendChild(div);
+              
+              e = doc.body.innerHTML;
+            }
+          } catch (error) {
+            e = div.outerHTML;
+          }
+        }
 
         // 遍歷配置對象中的每個標籤
         for (var tag in replacements) {
@@ -902,39 +974,6 @@
           // 處理不在標籤內的文本替換
           var textRegex = new RegExp(key, 'g');
           e = e.replace(textRegex, textreplacements[key]);
-        }
-
-        // 專門處理 Base64 解碼
-        var base64Regex = /b64="([^"]+)"/;
-        var match = base64Regex.exec(e);
-        
-        if (match && match[1]) {
-          var base64String = match[1];
-          var decodedContent = replacements.base64decode(base64String);
-          var imageUrl = JSON.parse(decodedContent).attachments[0].content.images[0].url;
-          
-          try {
-            var img = document.createElement("img");
-            img.className = "imggif";
-            img.src = imageUrl;
-            img.setAttribute('onerror', `retryLoadImage(this, '${imageUrl}', 3)`);
-            img.setAttribute('onload', 'this.title = this.src');
-            img.setAttribute('loading', 'lazy');
-            
-            var div = document.createElement("div");
-            div.className = "divgif";
-            div.appendChild(img);
-            
-            var span = document.createElement("span");
-            span.innerText = '(gif)';
-            div.appendChild(span);
-            
-            e = div.outerHTML;
-            
-          } catch (error) {
-            console.error("解析 JSON 失敗:", error);
-            e = '<div>(decode base64 error)</div>';
-          }
         }
         
         return e;
