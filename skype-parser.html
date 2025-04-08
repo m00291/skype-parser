@@ -754,7 +754,7 @@
           const URIObjectnode = quote.getElementsByTagName("URIObject")[0];
           const v_doc_id = URIObjectnode.getAttribute("doc_id");
           
-          if (!URIObjectnode.getElementsByTagName("swift")) {
+          if (URIObjectnode.getElementsByTagName("swift").length == 0) {
             quote.removeChild(URIObjectnode);
             
             var tempDiv = document.createElement('div');
@@ -871,7 +871,7 @@
             const quote = doc.getElementsByTagName("quote")[0];
             const URIObjectnode = quote.getElementsByTagName("URIObject")[0];
             
-            if (URIObjectnode.getElementsByTagName("swift")) {
+            if (URIObjectnode.getElementsByTagName("swift").length > 0) {
               quote.removeChild(URIObjectnode);
               quote.appendChild(div);
               
