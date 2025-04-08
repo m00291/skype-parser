@@ -1,0 +1,211 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JSON Beautifier</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            padding: 0;
+        }
+        #dropArea {
+            border: 2px dashed #ddd;
+            padding: 200px;
+            text-align: center;
+            margin-bottom: 20px;
+            cursor: pointer;
+            position: relative;
+        }
+        #copyArea {
+            padding: 20px 0px;
+            position: relative;
+        }
+        #progressBarContainer {
+            width: 100%;
+            background-color: #f3f3f3;
+            border-radius: 5px;
+            overflow: hidden;
+            height: 20px;
+            position: relative;
+            margin-top: 10px;
+            display: none;
+        }
+        #progressBar {
+            height: 100%;
+            width: 0;
+            background-color: #4caf50;
+            transition: width 0.1s;
+        }
+        button {
+            padding: 10px;
+            cursor: pointer;
+        }
+        pre {
+            background-color: #f8f8f8;
+            padding: 10px;
+            border: 1px solid #ddd;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            height: 200px;
+        }
+        #loadingAnimation {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: rgba(255, 255, 255, 0.8);
+            display: none;
+        }
+        #copyingAnimation {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: rgba(255, 255, 255, 0.8);
+            display: none;
+        }
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+
+<h2>JSON Beautifier</h2>
+
+<div id="dropArea">
+    Drag and drop a JSON file here.
+    <div id="loadingAnimation">
+        <div class="spinner"></div>
+    </div>
+    <div id="progressBarContainer">
+        <div id="progressBar"></div>
+    </div>
+</div>
+
+<span id="copyArea">
+    <button onclick="copyToClipboard()">Copy Beautified JSON</button>
+    <div id="copyingAnimation">
+        <div class="spinner"></div>
+    </div>
+</span>
+
+<pre id="jsonOutput"></pre>
+
+<script>
+    const dropArea = document.getElementById('dropArea');
+    const outputElement = document.getElementById('jsonOutput');
+    const progressBarContainer = document.getElementById('progressBarContainer');
+    const progressBar = document.getElementById('progressBar');
+    const loadingAnimation = document.getElementById('loadingAnimation');
+    const copyingAnimation = document.getElementById('copyingAnimation');
+
+    const workerBlob = new Blob([`
+        self.onmessage = function(event) {
+            try {
+                const parsedJSON = JSON.parse(event.data);
+                const beautifiedJSON = JSON.stringify(parsedJSON, null, 2);
+                self.postMessage(beautifiedJSON);
+            } catch (error) {
+                self.postMessage('Error parsing JSON: ' + error.message);
+            }
+        };
+    `], { type: 'application/javascript' });
+
+    const worker = new Worker(URL.createObjectURL(workerBlob));
+
+    worker.onmessage = function(event) {
+        loadingAnimation.style.display = 'none';
+        outputElement.textContent = event.data;
+    };
+
+    dropArea.addEventListener('dragover', (event) => {
+        event.preventDefault();
+        dropArea.style.backgroundColor = '#f0f0f0';
+    });
+
+    dropArea.addEventListener('dragleave', () => {
+        dropArea.style.backgroundColor = '';
+    });
+
+    dropArea.addEventListener('drop', (event) => {
+        event.preventDefault();
+        dropArea.style.backgroundColor = '';
+
+        const files = event.dataTransfer.files;
+        if (files.length > 0) {
+            const file = files[0];
+            if (file.type === 'application/json' || file.name.endsWith('.json')) {
+                const reader = new FileReader();
+
+                reader.onprogress = (e) => {
+                    if (e.lengthComputable) {
+                        const percentLoaded = (e.loaded / e.total) * 100;
+                        progressBar.style.width = percentLoaded + '%';
+                    }
+                };
+
+                reader.onloadstart = () => {
+                    progressBarContainer.style.display = 'block';
+                    progressBar.style.width = '0%';
+                };
+
+                reader.onloadend = () => {
+                    progressBar.style.width = '100%';
+                    setTimeout(() => {
+                        progressBarContainer.style.display = 'none';
+                        loadingAnimation.style.display = 'flex'; // Show animation when reading finishes
+                        worker.postMessage(reader.result); // Start parsing
+                    }, 500);
+                };
+
+                reader.readAsText(file);
+            } else {
+                alert('Please drop a valid JSON file.');
+            }
+        }
+    });
+
+    function copyToClipboard() {
+        copyingAnimation.style.display = 'flex'; // Show the loading animation
+        setTimeout(() => { // Use setTimeout to prevent UI freezing
+            const range = document.createRange();
+            range.selectNode(outputElement);
+            window.getSelection().removeAllRanges();
+            window.getSelection().addRange(range);
+
+            try {
+                const successful = document.execCommand('copy');
+                const message = successful ? 'Copied to clipboard!' : 'Copy failed';
+                alert(message);
+            } catch (err) {
+                alert('Unable to copy');
+            }
+
+            window.getSelection().removeAllRanges();
+            copyingAnimation.style.display = 'none'; // Hide the loading animation
+        }, 100); // A small delay to allow the animation to appear
+    }
+</script>
+
+</body>
+</html>
