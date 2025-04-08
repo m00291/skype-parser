@@ -199,19 +199,22 @@
     li.message {
       color: #0b0b10;
       margin: .5rem auto;
+      display: grid;
+      justify-content: start;
     }
     .message-author {
       background-color: #fff;
       width: fit-content;
       border-radius: 15px;
       border-bottom-left-radius: 0px;
-      padding: 0.5rem 1rem;
+      border-bottom-right-radius: 0px;
+      padding: 0.5rem 1rem 1rem;
+      margin-bottom: -1rem;
     }
     .message-body {
       white-space: pre-wrap;
       word-break: break-all;
       background-color: #fff;
-      width: fit-content;
       border-radius: 15px;
       border-top-left-radius: 0px;
       padding: 0.5rem 1rem;
@@ -392,6 +395,7 @@
       width: fit-content;
       white-space: pre-wrap;
       word-break: break-all;
+      border-radius: 10px;
     }
     .redirect_icon {
       color: gray;
