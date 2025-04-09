@@ -1,13 +1,16 @@
 # 繁中 Skype Parser
 
-<ins>json-beautify.html</ins>  
-make history json readabile
+> [!TIP]
+> `json-beautify.html`  
+> make history json readabile
 
-> Original Skype Parser from  
-> https://secure.skype.com/en/data-export
 
-> full list of emoticons  
-> https://support.microsoft.com/en-us/skype/what-is-the-full-list-of-emoticons-01af0c65-529f-4a4d-8e3a-a393033a359a
+
+> `Original Skype Parser`  
+> from https://secure.skype.com/en/data-export
+
+> `full list of emoticons`  
+> from https://support.microsoft.com/en-us/skype/what-is-the-full-list-of-emoticons-01af0c65-529f-4a4d-8e3a-a393033a359a
 
 ## developing task list
 - [x] add drag json
@@ -26,3 +29,4 @@ make history json readabile
 - [ ] emotion reaction
 - [ ] parse Bing/Copilot
 - [ ] MediaAlbum
+- [ ] Revamp to DOM structure
