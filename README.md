@@ -4,8 +4,6 @@
 > `json-beautify.html`  
 > make history json readabile
 
-
-
 > `Original Skype Parser`  
 > from https://secure.skype.com/en/data-export
 
@@ -15,18 +13,19 @@
 ## developing task list
 - [x] add drag json
 - [x] add media path
-- [x] create link
+- [x] add Loading spinner for large history
+- [x] parse link
 - [x] parse call
 - [x] parse image (jpeg/png/gif/sticker)
 - [x] parse base64 image
 - [x] parse quote
 - [x] add redirect to quote
-- [x] parse forward from other
-- [ ] attachment container
-- [ ] mp4 container
-- [ ] call container
-- [ ] skype animated emoji mapping
-- [ ] emotion reaction
+- [x] parse forwarded from other
+- [ ] parse attachment container
+- [ ] parse mp4 container
+- [ ] parse call container
+- [ ] parse skype animated emoji
+- [ ] parse emotion reaction
 - [ ] parse Bing/Copilot
 - [ ] MediaAlbum
 - [ ] Revamp to DOM structure
