@@ -21,6 +21,8 @@
 - [x] parse quote
 - [x] add redirect to quote
 - [x] parse forwarded from other
+- [x] parse url preview
+- [ ] parse edited message ("properties": {"edittime" "isserversidegenerated")
 - [ ] parse attachment container
 - [ ] parse mp4 container
 - [ ] parse call container
