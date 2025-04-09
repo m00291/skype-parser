@@ -212,15 +212,36 @@
       margin-bottom: -1rem;
     }
     .message-body {
-      white-space: pre-wrap;
       word-break: break-all;
       background-color: #fff;
       border-radius: 15px;
       border-top-left-radius: 0px;
       padding: 0.5rem 1rem;
+      max-width: 800px;
     }
     .emotions {
       display: none;
+    }
+    .urlpreviews {
+      margin-top: 10px;
+      padding: 10px;
+      border-radius: 8px;
+      background-color: #f0f0f0;
+      border: 1px solid #e0e0e0;
+      width: fit-content;
+      max-width: 500px;
+      word-break: break-word;
+      display: none;
+    }
+    .url-title {
+        font-size: 1.1em;
+        font-weight: bold;
+        color: #333;
+        margin-bottom: 5px;
+    }
+    .url-description {
+        font-size: 0.9em;
+        color: #666;
     }
     li.conversations {
       background-color: #f2f2f2;
@@ -393,7 +414,6 @@
       padding: 10px;
       box-shadow: 2px 2px 10px 4px rgba(0, 0, 0, 0.1);
       width: fit-content;
-      white-space: pre-wrap;
       word-break: break-all;
       border-radius: 10px;
     }
@@ -675,8 +695,12 @@
                 var d = document.createElement("div");
                 d.className = "message-body";
                 
+                if (a[s].properties && "urlpreviews" in a[s].properties) {
+                  a[s].content += '<div class="urlpreviews">' + a[s].properties.urlpreviews + '</div>';
+                }
+                
                 if (a[s].properties && "emotions" in a[s].properties) {
-                  a[s].content += '<div class="emotions">' + JSON.stringify(a[s].properties) + '</div>';
+                  a[s].content += '<div>[emotions]</div><div class="emotions">' + JSON.stringify(a[s].properties.emotions) + '</div>';
                 }
                 
                 d.innerHTML = a[s].amsreferences == null || a[s].messagetype === "RichText/Media_GenericFile"
@@ -740,7 +764,7 @@
         return e.replace(/^8:/, "").replace(/^\d{2}:.+(@thread\.skype)/, "@thread.skype");
       }
       
-      // added 20250318 by david
+      //----------------------------------------------------------------------------------------
       function u(e) {
         var messageId;
         const messageIdMatch = e.match(/messageid="(\d+)"/);
@@ -753,6 +777,8 @@
         
         const parser = new DOMParser();
         const doc = parser.parseFromString(e, 'text/html');
+        
+        // show quote > media
         try {
           const quote = doc.getElementsByTagName("quote")[0];
           const URIObjectnode = quote.getElementsByTagName("URIObject")[0];
@@ -770,6 +796,34 @@
           e = doc.body.innerHTML;
         } catch(err) {}
         
+        // show url preview
+        try {
+          const preview = doc.getElementsByClassName("urlpreviews")[0];
+          const previewjson = preview.innerHTML;
+          
+          if ("title" in JSON.parse(previewjson)[0].value) {
+            preview.style.display = 'block';
+            preview.innerHTML = '';
+            
+            var ti = document.createElement('div');
+            ti.className = 'url-title';
+            ti.innerHTML = JSON.parse(previewjson)[0].value.title;
+            
+            preview.append(ti);
+          }
+          
+          if ("description" in JSON.parse(previewjson)[0].value) {
+            var des = document.createElement('div');
+            des.className = 'url-description';
+            des.innerHTML = JSON.parse(previewjson)[0].value.description;
+            
+            preview.append(des);
+          }
+          
+          e = doc.body.innerHTML;
+        } catch(err) {}
+        
+        // sticker cannot be loaded
         try {
           const URIObjectnode = doc.getElementsByTagName("URIObject")[0];
           const URIObjecturi = URIObjectnode.getAttribute("uri");
@@ -781,14 +835,14 @@
             img.src = URIObjecturi;
             img.title = URIObjecturi;
             
-            var e = document.createElement("span");
-            e.innerHTML = '(error 404)';
+            var s = document.createElement("span");
+            s.innerHTML = '(error 404)';
             var m = document.createElement("span");
             m.innerHTML = '(sticker)';
             
             var d = document.createElement("div");
             d.className = "divimgerr";
-            d.appendChild(e);
+            d.appendChild(s);
             d.appendChild(img);
             d.appendChild(m);
             
@@ -796,7 +850,7 @@
           }
         } catch(err) {}
         
-        // 定義一個配置對象，包含每個標籤的替換邏輯
+        // tag content replacement logic
         const replacements = {
           duration: function(content) {
             const totalSeconds = parseFloat(content);
@@ -886,7 +940,7 @@
           }
         }
 
-        // 遍歷配置對象中的每個標籤
+        // tag content to replace
         for (var tag in replacements) {
           var regex = new RegExp("<" + tag + "(\\s+[^>]*?)?>(.*?)</" + tag + ">", 'g');
           e = e.replace(regex, function(match, attrs, p1) {
@@ -894,7 +948,7 @@
           });
         }
         
-        // 定義一個配置對象，包含每個標籤的替換邏輯
+        // text replacement logic
         const textreplacements = {
           "<pictureupdate": function() {
             return "變更圖片 <pictureupdate";
@@ -965,6 +1019,9 @@
           '<legacyquote>\n\n&lt;&lt;&lt; </legacyquote>': function() {
             return '';
           },
+          '<legacyquote>\r\n\r\n&lt;&lt;&lt; </legacyquote>': function() {
+            return '';
+          },
           '<a href=': function() {
             return '<a target=\"_blank\" href=';
           },
@@ -973,9 +1030,8 @@
           }
         };
 
-        // 遍歷配置對象中的每個標籤
+        // text to replace
         for (var key in textreplacements) {
-          // 處理不在標籤內的文本替換
           var textRegex = new RegExp(key, 'g');
           e = e.replace(textRegex, textreplacements[key]);
         }
