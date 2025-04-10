@@ -28,6 +28,7 @@
 - [ ] parse attachment
 - [ ] parse Poll
 - [ ] parse mp4
+- [ ] add media file path info
 - [x] parse call
 - [ ] parse skype animated emoji
 - [ ] parse emotion reaction
