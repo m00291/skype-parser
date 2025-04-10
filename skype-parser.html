@@ -740,12 +740,17 @@
                   isForwarded_s = "isForwarded:true";
                 }
                 
+                var Media_GenericFile_s = '';
+                if (a[s].messagetype === "RichText/Media_GenericFile") {
+                  Media_GenericFile_s = "<div class='attachment_container'></div>";
+                }
+                
                 if (a[s].messagetype === "RichText/Media_Album") {
                   continue;
                 }
                 
                 d.innerHTML = a[s].amsreferences == null || a[s].messagetype === "RichText/Media_GenericFile"
-                            ? u(isForwarded_s + a[s].content + urlpreviews_s + emotions_s)
+                            ? u(isForwarded_s + Media_GenericFile_s + a[s].content + urlpreviews_s + emotions_s)
                             : media(a[s].amsreferences);
                 r.appendChild(d);
                 fragment.appendChild(r);
@@ -851,7 +856,7 @@
         
         // show attachment
         try {
-          const a = doc.getElementsByTagName("URIObject")[0];
+          const a = doc.getElementsByClassName("attachment_container")[0];
           const file_name = a.getElementsByTagName("OriginalName")[0].getAttribute("v");
           
           if (file_name.length > 0) {
