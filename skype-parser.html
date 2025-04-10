@@ -897,7 +897,7 @@
             
             if (match) {
               const date = new Date(parseInt(match[1], 10) * 1000);
-              const formattedDate = '[' + date.toLocaleString("en-GB", { hour12: true }) + ']';
+              const formattedDate = date.toLocaleString("en-GB", { hour12: true });
               var icon = '<span class="redirect_icon">↩</span>';
               if (isForwardedtrue) {
                 return icon + '<span class="author">(轉寄)' + content.replace(match[0], '') + '</span><span class="timestamp">' + formattedDate + '</span><br>';
