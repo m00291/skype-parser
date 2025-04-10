@@ -24,8 +24,10 @@
 - [x] parse url preview
 - [x] parse edited message
 - [x] remove server side message count
-- [ ] parse attachment container
-- [ ] parse mp4 container
+- [x] parse pictureupdate
+- [ ] parse attachment
+- [ ] parse Poll
+- [ ] parse mp4
 - [x] parse call
 - [ ] parse skype animated emoji
 - [ ] parse emotion reaction
