@@ -741,7 +741,7 @@
                 o.appendChild(i);
                 var l = document.createElement("span");
                 l.className = "timestamp";
-                l.textContent = "[deleted] (" + new Date(parseFloat(a[s].properties.deletetime)).toLocaleString("en-GB", { hour12: true }) +")";
+                l.textContent = new Date(parseFloat(a[s].properties.deletetime)).toLocaleString("en-GB", { hour12: true }) +" [deleted]";
                 o.appendChild(l);
                 fragment.appendChild(r);
               }
@@ -1056,16 +1056,6 @@
       }
       
       function u2(e) {
-        if (e.amsreferences !== null) {
-          e = e.amsreferences;
-        } else if (e.properties.deletetime !== undefined) {
-          e = "<span class='deleted'>[deleted] (" + new Date(parseFloat(e.properties.deletetime)).toLocaleString("en-GB", { hour12: true }) +")</span>";
-        } else if (e.properties.isserversidegenerated !== undefined) {
-          e = "[edited message]";
-        } else {
-          e = e.originalarrivaltime;
-        }
-        
         return e;
       }
       
