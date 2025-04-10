@@ -581,13 +581,13 @@
         imgElement.title = imageUrl;
         imgElement.className = 'imgerr';
         
+        imgElement.parentNode.className = "divimgerr";
+        imgElement.parentElement.prepend(err);
+        
         if (imgElement.parentElement.getElementsByClassName("ext")[0].innerHTML == '(mp4)') {
           imgElement.parentElement.getElementsByClassName("ext")[0].innerHTML = '(unknown)';
           imgElement.title = imageUrl.substring(0 , imageUrl.length - 6);
         }
-        
-        imgElement.parentNode.className = "divimgerr";
-        imgElement.parentElement.prepend(err);
       }
     }
     function retryLoadMedia(imgElement, imageUrl, retries, currentExtensionIndex = 0) {
@@ -856,17 +856,27 @@
         
         // show attachment
         try {
-          const a = doc.getElementsByClassName("attachment_container")[0];
-          const file_name = a.getElementsByTagName("OriginalName")[0].getAttribute("v");
+          const attachment_container = doc.getElementsByClassName("attachment_container")[0];
+          const a = doc.getElementsByTagName("URIObject")[0];
+          const filename = a.getElementsByTagName("OriginalName")[0].getAttribute("v");
+          const filesize = a.getElementsByTagName("FileSize")[0].getAttribute("v");
           
-          if (file_name.length > 0) {
+          if (filename.length > 0) {
             var div = document.createElement('div');
-            div.innerHTML = 'File: ' + file_name;
-            div.className = 'attachment_container';
+            div.innerHTML = 'File: ' + filename;
             
-            a.innerHTML = '';
-            a.appendChild(div);
+            attachment_container.appendChild(div);
             
+            if (filesize) {
+              const bytes = parseInt(filesize, 10);
+              const megabytes = (bytes / (1024 * 1024)).toFixed(2);
+              
+              var size = document.createElement('div');
+              size.innerHTML = 'File size: ' + megabytes + 'MB';
+              attachment_container.appendChild(size);
+            }
+            
+            a.remove();
             e = doc.body.innerHTML;
           }
         } catch(err) {}
