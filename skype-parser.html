@@ -794,6 +794,21 @@
         const parser = new DOMParser();
         const doc = parser.parseFromString(e, 'text/html');
         
+        // show pictureupdate
+        try {
+          const pictureupdate = doc.getElementsByTagName("pictureupdate")[0];
+          const value = pictureupdate.getElementsByTagName("value")[0];
+          
+          var newimg = document.createElement('img');
+          newimg.src = value.textContent.substring(4);
+          newimg.title = value.textContent.substring(4);
+          pictureupdate.removeChild(value);
+          pictureupdate.appendChild(document.createElement('br'));
+          pictureupdate.appendChild(newimg);
+          
+          e = doc.body.innerHTML;
+        } catch(err) {}
+        
         // show quote > media
         try {
           const quote = doc.getElementsByTagName("quote")[0];
