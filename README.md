@@ -25,7 +25,7 @@
 - [ ] parse edited message ("properties": {"edittime" "isserversidegenerated")
 - [ ] parse attachment container
 - [ ] parse mp4 container
-- [ ] parse call container
+- [x] parse call
 - [ ] parse skype animated emoji
 - [ ] parse emotion reaction
 - [ ] parse Bing/Copilot
