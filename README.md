@@ -22,7 +22,8 @@
 - [x] add redirect to quote
 - [x] parse forwarded from other
 - [x] parse url preview
-- [ ] parse edited message ("properties": {"edittime" "isserversidegenerated")
+- [x] parse edited message
+- [x] remove server side message count
 - [ ] parse attachment container
 - [ ] parse mp4 container
 - [x] parse call
@@ -30,4 +31,3 @@
 - [ ] parse emotion reaction
 - [ ] parse Bing/Copilot
 - [ ] MediaAlbum
-- [ ] Revamp to DOM structure
