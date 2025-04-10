@@ -25,10 +25,10 @@
 - [x] parse edited message
 - [x] remove server side message count
 - [x] parse pictureupdate
-- [ ] parse attachment
+- [x] parse attachment
 - [ ] parse Poll
 - [ ] parse mp4
-- [ ] add media file path info
+- [ ] add media file path tooltip
 - [x] parse call
 - [ ] parse skype animated emoji
 - [ ] parse emotion reaction
