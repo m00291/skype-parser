@@ -427,6 +427,13 @@
       word-break: break-all;
       border-radius: 10px;
     }
+    .attachment_container {
+      background: #5b5b5b5c;
+      padding: 1rem;
+      width: fit-content;
+      word-break: break-all;
+      border-radius: 10px;
+    }
     .redirect_icon {
       color: gray;
       margin-right: 5px;
@@ -435,7 +442,7 @@
       transform: scaleY(-1);
       display: inline-block;
     }
-    legacyquote:hover a span {
+    legacyquote:hover a.msgredirect span {
       color: black;
     }
     legacyquote a {
@@ -574,6 +581,11 @@
         imgElement.title = imageUrl;
         imgElement.className = 'imgerr';
         
+        if (imgElement.parentElement.getElementsByClassName("ext")[0].innerHTML == '(mp4)') {
+          imgElement.parentElement.getElementsByClassName("ext")[0].innerHTML = '(unknown)';
+          imgElement.title = imageUrl.substring(0 , imageUrl.length - 6);
+        }
+        
         imgElement.parentNode.className = "divimgerr";
         imgElement.parentElement.prepend(err);
       }
@@ -634,7 +646,7 @@
         
         return m.outerHTML;
       }
-      return e;
+      return '[Media file path: ' + e + ']';
     }
     
     // Function to create and show a loading spinner
@@ -713,18 +725,27 @@
                 var d = document.createElement("div");
                 d.className = "message-body";
                 
+                var urlpreviews_s = '';
                 if (a[s].properties && "urlpreviews" in a[s].properties) {
-                  a[s].content += '<div class="urlpreviews">' + a[s].properties.urlpreviews + '</div>';
+                  urlpreviews_s = '<div class="urlpreviews">' + a[s].properties.urlpreviews + '</div>';
                 }
                 
+                var emotions_s = '';
                 if (a[s].properties && "emotions" in a[s].properties) {
-                  a[s].content += '<div>[emotions]</div><div class="emotions">' + JSON.stringify(a[s].properties.emotions) + '</div>';
+                  emotions_s = '<div>[emotions]</div><div class="emotions">' + JSON.stringify(a[s].properties.emotions) + '</div>';
+                }
+                
+                var isForwarded_s = '';
+                if (a[s].properties && "forwardMetadata" in a[s].properties) {
+                  isForwarded_s = "isForwarded:true";
+                }
+                
+                if (a[s].messagetype === "RichText/Media_Album") {
+                  continue;
                 }
                 
                 d.innerHTML = a[s].amsreferences == null || a[s].messagetype === "RichText/Media_GenericFile"
-                            ? (a[s].properties && "forwardMetadata" in a[s].properties)
-                            ? u("isForwarded:true" + a[s].content)
-                            : u(a[s].content)
+                            ? u(isForwarded_s + a[s].content + urlpreviews_s + emotions_s)
                             : media(a[s].amsreferences);
                 r.appendChild(d);
                 fragment.appendChild(r);
@@ -788,7 +809,6 @@
           messageId = messageIdMatch[1];
         }
         
-        var isForwarded;
         const isForwardedtrue = e.match(/isForwarded:true/);
         
         const parser = new DOMParser();
@@ -827,6 +847,23 @@
           }
           
           e = doc.body.innerHTML;
+        } catch(err) {}
+        
+        // show attachment
+        try {
+          const a = doc.getElementsByTagName("URIObject")[0];
+          const file_name = a.getElementsByTagName("OriginalName")[0].getAttribute("v");
+          
+          if (file_name.length > 0) {
+            var div = document.createElement('div');
+            div.innerHTML = 'File: ' + file_name;
+            div.className = 'attachment_container';
+            
+            a.innerHTML = '';
+            a.appendChild(div);
+            
+            e = doc.body.innerHTML;
+          }
         } catch(err) {}
         
         // show url preview
@@ -900,9 +937,9 @@
               const formattedDate = date.toLocaleString("en-GB", { hour12: true });
               var icon = '<span class="redirect_icon">↩</span>';
               if (isForwardedtrue) {
-                return icon + '<span class="author">(轉寄)' + content.replace(match[0], '') + '</span><span class="timestamp">' + formattedDate + '</span><br>';
+                return '<a class>' + icon + '<span class="author">(Forwarded)' + content.replace(match[0], '') + '</span><span class="timestamp">' + formattedDate + '</span></a><br>';
               } else {
-                return '<a class href="#' + messageId + '">' + icon + '<span class="author">' + content.replace(match[0], '') + '</span><span class="timestamp">' + formattedDate + '</span></a><br>';
+                return '<a class="msgredirect" href="#' + messageId + '">' + icon + '<span class="author">' + content.replace(match[0], '') + '</span><span class="timestamp">' + formattedDate + '</span></a><br>';
               }
             }
             
@@ -1102,7 +1139,13 @@
                   a.appendChild(r);
                   var o = document.createElement("span");
                   o.className = "messageCount";
-                  o.textContent = e[n].MessageList.length - e[n].MessageList.reduce((count, message) => { return count + (message.properties && message.properties.isserversidegenerated ? 1 : 0); }, 0) + " messages";
+                  o.textContent = e[n].MessageList.length
+                                - e[n].MessageList.reduce((count, message) => {
+                                    return count
+                                         + (message.properties && message.properties.isserversidegenerated ? 1 : 0)
+                                         + (message.messagetype && message.messagetype === 'RichText/Media_Album' ? 1 : 0);
+                                  }, 0)
+                                + " messages";
                   r.appendChild(o);
                   var i = e[n].properties && e[n].properties.lastimreceivedtime ? e[n].properties.lastimreceivedtime : null;
                   if (i) {
