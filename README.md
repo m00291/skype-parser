@@ -27,7 +27,7 @@
 - [x] parse pictureupdate
 - [x] parse attachment
 - [ ] parse Poll
-- [ ] parse mp4
+- [x] parse mp4
 - [ ] add media file path tooltip
 - [x] parse call
 - [ ] parse skype animated emoji
