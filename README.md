@@ -19,7 +19,7 @@
 - [x] parse image (jpeg/png/gif/sticker)
 - [x] parse base64 image
 - [x] parse quote
-- [x] add redirect to quote
+- [x] add anchor to quote
 - [x] parse forwarded from other
 - [x] parse url preview
 - [x] parse edited message
