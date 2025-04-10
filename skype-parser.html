@@ -488,15 +488,11 @@
       }
     }
     
-    .thumbnail {
+    .video-thumbnail-container {
       position: relative;
       display: inline-block;
     }
-    .thumbnail img {
-      width: 100%;
-      height: auto;
-      display: block;
-    }
+    /* Play button overlay */
     .play-button {
       position: absolute;
       top: 50%;
@@ -504,12 +500,27 @@
       transform: translate(-50%, -50%);
       width: 60px;
       height: 60px;
-      background-color: rgba(255, 255, 255, 0.8);
+      background-color: rgba(0, 0, 0, 0.7);
       border-radius: 50%;
       display: flex;
-      align-items: center;
       justify-content: center;
+      align-items: center;
+      pointer-events: none; /* Allows clicks to pass through to the image */
+    }
+    /* Play triangle inside the button */
+    .play-button::after {
+      content: '';
+      display: block;
+      width: 0;
+      height: 0;
+      border-top: 15px solid transparent;
+      border-bottom: 15px solid transparent;
+      border-left: 25px solid white;
+      margin-left: 5px; /* Adjust for centering */
+    }
+    .img-thumbnail {
       cursor: pointer;
+      max-width: 450px;
     }
     .modal {
       display: none;
@@ -521,6 +532,7 @@
       background-color: rgba(0, 0, 0, 0.44);
       justify-content: center;
       align-items: center;
+      z-index: 9;
     }
     .modal video {
       max-width: 90%;
@@ -609,6 +621,7 @@
         videoModal.style.display = 'none';
       }
     });
+    
     function playvideo(imgElement) {
       const videoModal = document.getElementById('videoModal');
       const videoPlayer = document.getElementById('videoPlayer');
@@ -676,11 +689,16 @@
       } else {
         //console.error("所有擴展名載入失敗:", extensions.join(", "));
         
+        var play_btn = document.createElement("div");
+        play_btn.className = 'play-button';
+        imgElement.parentElement.prepend(play_btn);
+        imgElement.parentElement.classList.add('video-thumbnail-container');
         
         imgElement.parentElement.getElementsByClassName("ext")[0].innerHTML = '(mp4)';
         imgElement.setAttribute('onclick','playvideo(this)');
         retryLoadImage(imgElement, imageUrl + ".2.jpeg", maxRetries);
         imgElement.className = "jsonimg";
+        imgElement.classList.add('img-thumbnail');
       }
     }
     
