@@ -165,6 +165,10 @@
       padding-left: .5rem;
       font-size: small;
     }
+    span.deleted {
+      color: #626f82;
+      font-size: small;
+    }
     span.timestamp-conv {
       color: #626f82;
       padding-left: .5rem;
@@ -210,6 +214,12 @@
       border-bottom-right-radius: 0px;
       padding: 0.5rem 1rem 1rem;
       margin-bottom: -1rem;
+    }
+    .message-deleted {
+      background-color: #e5e5e5;
+      width: fit-content;
+      border-radius: 15px;
+      padding: 0.5rem 1rem;
     }
     .message-body {
       word-break: break-all;
@@ -678,7 +688,7 @@
             const end = Math.min(processedCount + chunkSize, totalMessages);
             
             for (let s = start; s < end; s++) {
-              if ("" !== a[s].content) {
+              if (("" !== a[s].content) && !(a[s].properties && "isserversidegenerated" in a[s].properties)) {
                 var r = document.createElement("li");
                 r.className = "message";
                 r.setAttribute("id", a[s].id);
@@ -687,11 +697,19 @@
                 r.appendChild(o);
                 var i = document.createElement("span");
                 i.className = "author";
-                i.textContent = p(a[s].from);
+                i.textContent = p(a[s].displayName !== null ? a[s].displayName : a[s].from);
                 o.appendChild(i);
                 var l = document.createElement("span");
                 l.className = "timestamp";
-                l.textContent = new Date(a[s].originalarrivaltime).toLocaleString("en-GB", { hour12: true }), o.appendChild(l);
+                l.textContent = new Date(a[s].originalarrivaltime).toLocaleString("en-GB", { hour12: true });
+                o.appendChild(l);
+                if (a[s].properties && "edittime" in a[s].properties) {
+                  var et = document.createElement("span");
+                  et.className = "timestamp";
+                  const date = new Date(parseInt(a[s].properties.edittime));
+                  et.textContent = '(' + date.toLocaleString("en-GB", { hour12: true }) + ' edited)';
+                  o.appendChild(et);
+                }
                 var d = document.createElement("div");
                 d.className = "message-body";
                 
@@ -710,23 +728,21 @@
                             : media(a[s].amsreferences);
                 r.appendChild(d);
                 fragment.appendChild(r);
-              } else if (a[s].properties && !("isserversidegenerated" in a[s].properties)) {
+              } else if ("" === a[s].content && a[s].properties && "deletetime" in a[s].properties) {
                 var r = document.createElement("li");
                 r.className = "message";
                 r.setAttribute("id", a[s].id);
                 var o = document.createElement("div");
+                o.className = "message-deleted";
                 r.appendChild(o);
                 var i = document.createElement("span");
                 i.className = "author";
-                i.textContent = p(a[s].from);
+                i.textContent = p(a[s].displayName !== null ? a[s].displayName : a[s].from);
                 o.appendChild(i);
                 var l = document.createElement("span");
                 l.className = "timestamp";
-                l.textContent = new Date(a[s].originalarrivaltime).toLocaleString("en-GB", { hour12: true }), o.appendChild(l);
-                var d = document.createElement("div");
-                d.className = "message-body";
-                d.innerHTML = u2(a[s]);
-                r.appendChild(d);
+                l.textContent = "[deleted] (" + new Date(parseFloat(a[s].properties.deletetime)).toLocaleString("en-GB", { hour12: true }) +")";
+                o.appendChild(l);
                 fragment.appendChild(r);
               }
             }
@@ -1043,9 +1059,8 @@
         if (e.amsreferences !== null) {
           e = e.amsreferences;
         } else if (e.properties.deletetime !== undefined) {
-          e = "[deleted] (" + new Date(parseFloat(e.properties.deletetime)).toLocaleString("en-GB", { hour12: true }) +")";
+          e = "<span class='deleted'>[deleted] (" + new Date(parseFloat(e.properties.deletetime)).toLocaleString("en-GB", { hour12: true }) +")</span>";
         } else if (e.properties.isserversidegenerated !== undefined) {
-        //edited messages will be duplicated by the server
           e = "[edited message]";
         } else {
           e = e.originalarrivaltime;
@@ -1079,7 +1094,9 @@
                   var r = document.createElement("div");
                   a.appendChild(r);
                   var o = document.createElement("span");
-                  o.className = "messageCount", o.textContent = e[n].MessageList.length + " messages", r.appendChild(o);
+                  o.className = "messageCount";
+                  o.textContent = e[n].MessageList.length - e[n].MessageList.reduce((count, message) => { return count + (message.properties && message.properties.isserversidegenerated ? 1 : 0); }, 0) + " messages";
+                  r.appendChild(o);
                   var i = e[n].properties && e[n].properties.lastimreceivedtime ? e[n].properties.lastimreceivedtime : null;
                   if (i) {
                     var l = document.createElement("span");
