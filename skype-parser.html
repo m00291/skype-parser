@@ -348,6 +348,9 @@
       display: flex;
       flex-direction: column;
     }
+    .divimgerr .play-button {
+      display: none;
+    }
     .step-1.form ol li {
       margin-top: 10px;
       margin-bottom: 10px;
@@ -666,19 +669,17 @@
       } else {
         //console.error("圖片載入失敗，已達最大重試次數:", imageUrl);
         
-        var err = document.createElement("span");
-        err.innerText = '(error 404)';
-        
         imgElement.title = imageUrl;
         imgElement.className = 'imgerr';
         
         imgElement.parentNode.className = "divimgerr";
-        parentele.prepend(err);
         
-        if (extele.getElementsByClassName("ext")[0].innerHTML == '(mp4)') {
-          extele.getElementsByClassName("ext")[0].innerHTML = '(unknown)';
+        var ext = extele.getElementsByClassName("ext")[0];
+        if (ext.innerHTML == '(mp4)') {
+          ext.innerHTML = '(unknown)';
           imgElement.title = imageUrl.substring(0 , imageUrl.length - 6);
         }
+        ext.innerHTML += '(error 404)';
       }
     }
     function retryLoadMedia(imgElement, imageUrl, retries, currentExtensionIndex = 0) {
@@ -1019,16 +1020,17 @@
             img.src = URIObjecturi;
             img.title = URIObjecturi;
             
-            var s = document.createElement("span");
-            s.innerHTML = '(error 404)';
             var m = document.createElement("span");
+            m.className = 'ext';
             m.innerHTML = '(sticker)';
+            var s = document.createElement("span");
+            m.innerHTML += '(error 404)';
             
             var d = document.createElement("div");
             d.className = "divimgerr";
-            d.appendChild(s);
             d.appendChild(img);
             d.appendChild(m);
+            d.appendChild(s);
             
             e = d.outerHTML;
           }
