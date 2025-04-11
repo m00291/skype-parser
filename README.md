@@ -1,4 +1,4 @@
-# 繁中 Skype Parser
+# Skype Chat History Parser
 
 > [!TIP]
 > `json-beautify.html`  
