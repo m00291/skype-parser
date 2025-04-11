@@ -411,7 +411,12 @@
     .jsonimg {
       max-width: 100%;
     }
+    .ext {
+      color: #626f82;
+      font-size: small;
+    }
     img, video {
+      display: block;
       border: 2px solid #ddd;
       border-radius: 5px;
       box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
@@ -491,6 +496,8 @@
     .video-thumbnail-container {
       position: relative;
       display: inline-block;
+      background-color: rgb(0 0 0 / 80%);
+      border-radius: 5px;
     }
     /* Play button overlay */
     .play-button {
@@ -500,7 +507,7 @@
       transform: translate(-50%, -50%);
       width: 60px;
       height: 60px;
-      background-color: rgba(0, 0, 0, 0.7);
+      background-color: rgb(0 0 0 / 60%);
       border-radius: 50%;
       display: flex;
       justify-content: center;
@@ -515,12 +522,15 @@
       height: 0;
       border-top: 15px solid transparent;
       border-bottom: 15px solid transparent;
-      border-left: 25px solid white;
+      border-left: 25px solid rgb(255 255 255 / 60%);
       margin-left: 5px; /* Adjust for centering */
     }
-    .img-thumbnail {
+    .video-thumbnail {
       cursor: pointer;
       max-width: 450px;
+    }
+    .video-thumbnail:hover {
+      opacity: 80%;
     }
     .modal {
       display: none;
@@ -698,7 +708,7 @@
         imgElement.setAttribute('onclick','playvideo(this)');
         retryLoadImage(imgElement, imageUrl + ".2.jpeg", maxRetries);
         imgElement.className = "jsonimg";
-        imgElement.classList.add('img-thumbnail');
+        imgElement.classList.add('video-thumbnail');
       }
     }
     
