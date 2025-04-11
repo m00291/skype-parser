@@ -593,7 +593,7 @@
     <div id="selected-conversation-placeholder" class="step-2">
       <div class="modal" id="videoModal">
         <video id="videoPlayer" controls>
-          <source src="video.mp4" type="video/mp4">
+          <source src="" type="video/mp4">
           Your browser does not support the video tag.
         </video>
       </div>
@@ -636,6 +636,8 @@
   </div>
   
   <script type="text/javascript">
+    const maxRetries = 2; // minimum 1 for switching extensions
+    
     document.getElementById('videoModal').addEventListener('click', (event) => {
       if (event.target === document.getElementById('videoModal')) {
         const videoPlayer = document.getElementById('videoPlayer');
@@ -655,36 +657,41 @@
     }
     
     // 圖片載入失敗時重試
-    function retryLoadImage(imgElement, imageUrl, retries) {
+    function retryLoadImage(imgElement, imageUrl, retries, e) {
+      console.clear(); // comment this line to view log
+      
       const parentele = imgElement.parentElement;
       const extele = parentele.parentElement;
       if (retries > 0) {
-        //console.warn(`圖片載入失敗，重試中 (${4 - retries}/3):`, imageUrl);
+        //console.info(`載入中(${maxRetries - retries + 1}/${maxRetries}):`, e);
         setTimeout(() => {
-          imgElement.src = imageUrl + "?retry=" + (4 - retries); // 加入參數避免瀏覽器快取
+          imgElement.src = imageUrl + "?retry=" + (maxRetries - retries + 1); // 加入參數避免瀏覽器快取
           imgElement.onerror = function () {
-            retryLoadImage(imgElement, imageUrl, retries - 1);
+            retryLoadImage(imgElement, imageUrl, retries - 1, e);
           };
         }, 100); // 0.1 秒後重試
       } else {
-        //console.error("圖片載入失敗，已達最大重試次數:", imageUrl);
+        //console.error(`載入失敗(${maxRetries}/${maxRetries}):`, e);
         
-        imgElement.title = imageUrl;
+        imgElement.title = e.substring(0 , e.length - 7);
         imgElement.className = 'imgerr';
         
         imgElement.parentNode.className = "divimgerr";
         
-        var ext = extele.getElementsByClassName("ext")[0];
-        if (ext.innerHTML == '(mp4)') {
-          ext.innerHTML = '(unknown)';
-          imgElement.title = imageUrl.substring(0 , imageUrl.length - 6);
-        }
-        ext.innerHTML += '(error 404)';
+        try {
+          var ext = extele.getElementsByClassName("ext")[0];
+          if (ext.innerHTML == '(mp4)') {
+            ext.innerHTML = '(unknown)';
+            imgElement.setAttribute('onclick','');
+          }
+          ext.innerHTML += '(error 404)';
+        } catch(err) {}
       }
     }
-    function retryLoadMedia(imgElement, imageUrl, retries, currentExtensionIndex = 0) {
+    function retryLoadMedia(imgElement, imageUrl, retries, e, currentExtensionIndex = 0) {
+      console.clear(); // comment this line to view log
+      
       const extensions = ['jpeg', 'png', 'gif'];
-      const maxRetries = 3;
       const parentele = imgElement.parentElement;
       const extele = parentele.parentElement;
       
@@ -692,35 +699,38 @@
         const ex = extensions[currentExtensionIndex];
         
         if (retries > 0) {
-          //console.warn(`載入失敗，重試中 (${maxRetries - retries + 1}/${maxRetries}):`, ex);
+          //console.info(`載入中(${maxRetries - retries + 1}/${maxRetries}):`, `${e}.1.${ex}`);
           setTimeout(() => {
             imgElement.src = imageUrl + ".1." + ex + "?retry=" + (maxRetries - retries + 1); // Adding parameter to avoid browser cache
-            imgElement.className = "jsonimg";
             if (currentExtensionIndex == 2) {
               imgElement.className = "imggif";
             }
             imgElement.onerror = function () {
-              retryLoadMedia(imgElement, imageUrl, retries - 1, currentExtensionIndex);
+              retryLoadMedia(imgElement, imageUrl, retries - 1, e, currentExtensionIndex);
             };
             
-            extele.getElementsByClassName("ext")[0].innerHTML = '(' + ex + ')';
+            try {
+              extele.getElementsByClassName("ext")[0].innerHTML = '(' + ex + ')';
+            } catch (err) {}
           }, 100); // 0.1 seconds before retry
         } else {
           // If retries for the current extension are exhausted, move to the next extension
-          //console.error(`載入失敗: ${ex}, 嘗試下一個擴展名`);
-          retryLoadMedia(imgElement, imageUrl, maxRetries, currentExtensionIndex + 1);
+          //console.warn(`載入失敗: ${e}.1.${ex}, 嘗試下一個擴展名`);
+          retryLoadMedia(imgElement, imageUrl, maxRetries, e, currentExtensionIndex + 1);
         }
       } else {
-        //console.error("所有擴展名載入失敗:", extensions.join(", "));
+        //console.warn(`${e} 載入失敗:`, extensions.join(", "));
         
         var play_btn = document.createElement("div");
         play_btn.className = 'play-button';
         imgElement.insertAdjacentElement("afterend", play_btn);
         
         parentele.classList.add('video-thumbnail-container');
-        extele.getElementsByClassName("ext")[0].innerHTML = '(mp4)';
+        try {
+          extele.getElementsByClassName("ext")[0].innerHTML = '(mp4)';
+        } catch (err) {}
         imgElement.setAttribute('onclick','playvideo(this)');
-        retryLoadImage(imgElement, imageUrl + ".2.jpeg", maxRetries);
+        retryLoadImage(imgElement, imageUrl + ".2.jpeg", maxRetries, e + ".2.jpeg");
         imgElement.className = "jsonimg";
         imgElement.classList.add('video-thumbnail');
       }
@@ -729,15 +739,15 @@
     function media(e) {
       var p = document.getElementById("filePath").value;
       if (p) {
-        e = p + (p.endsWith('\\') ? '' : '\\') + e;
+        var long_e = p + (p.endsWith('\\') ? '' : '\\') + e;
         var m = document.createElement("div");
         m.className = "media-container";
         
         // For images
         const img = new Image();
-        img.src = e + '.jpeg';
+        img.src = long_e + '.1.jpeg';
         img.className = "jsonimg";
-        img.setAttribute('onerror', `retryLoadMedia(this, '${e.replace(/\\/g, '\\\\')}', 3)`);
+        img.setAttribute('onerror', `retryLoadMedia(this, '${long_e.replace(/\\/g, '\\\\')}', ${maxRetries}, '${e}')`);
         img.setAttribute('onload', 'this.title = this.src');
         m.appendChild(img);
         
@@ -1075,7 +1085,7 @@
             try {
               return atob(content);
             } catch (e) {
-              console.error("Base64 解碼失敗:", e);
+              //console.error("Base64 解碼失敗:", e);
               return content; // 如果解碼失敗，返回原始內容
             }
           }
@@ -1096,7 +1106,7 @@
             var img = document.createElement("img");
             img.className = "imggif";
             img.src = imageUrl;
-            img.setAttribute('onerror', `retryLoadImage(this, '${imageUrl}', 3)`);
+            img.setAttribute('onerror', `retryLoadImage(this, '${imageUrl}', ${maxRetries}, '${imageUrl}')`);
             img.setAttribute('onload', 'this.title = this.src');
             
             div.className = "divgif";
@@ -1108,7 +1118,7 @@
             div.appendChild(span);
             
           } catch (error) {
-            console.error("解析 JSON 失敗:", error);
+            //console.error("解析 JSON 失敗:", error);
             e = '<div>(decode base64 error)</div>';
           }
           
