@@ -2,7 +2,7 @@
 
 > [!TIP]
 > `json-beautify.html`  
-> make history json readabile
+> make history json easy to read
 
 > `Original Skype Parser`  
 > from https://secure.skype.com/en/data-export
