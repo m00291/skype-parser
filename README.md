@@ -29,7 +29,6 @@
 - [ ] parse Poll
 - [x] parse mp4
 - [ ] add media file path tooltip
-- [x] parse call
 - [ ] parse skype animated emoji
 - [ ] parse emotion reaction
 - [ ] parse Bing/Copilot
