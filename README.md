@@ -11,7 +11,7 @@
 > from https://support.microsoft.com/en-us/skype/what-is-the-full-list-of-emoticons-01af0c65-529f-4a4d-8e3a-a393033a359a
 
 ## developing task list
-- [x] add drag json
+- [x] drag and drop chat history
 - [x] add media path
 - [x] add Loading spinner for large history
 - [x] parse link
