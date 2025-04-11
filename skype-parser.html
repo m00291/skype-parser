@@ -414,6 +414,7 @@
     .ext {
       color: #626f82;
       font-size: small;
+      display: block;
     }
     img, video {
       display: block;
@@ -507,7 +508,7 @@
       transform: translate(-50%, -50%);
       width: 60px;
       height: 60px;
-      background-color: rgb(0 0 0 / 60%);
+      background-color: rgb(0 0 0 / 40%);
       border-radius: 50%;
       display: flex;
       justify-content: center;
@@ -522,18 +523,19 @@
       height: 0;
       border-top: 15px solid transparent;
       border-bottom: 15px solid transparent;
-      border-left: 25px solid rgb(255 255 255 / 60%);
+      border-left: 25px solid rgb(255 255 255 / 50%);
       margin-left: 5px; /* Adjust for centering */
     }
     .video-thumbnail {
       cursor: pointer;
       max-width: 450px;
+      transition: 0.5s;
     }
     .video-thumbnail:hover {
-      opacity: 80%;
+      opacity: 70%;
     }
     .modal {
-      display: none;
+      display: flex;
       position: fixed;
       top: 0;
       left: 0;
@@ -543,6 +545,13 @@
       justify-content: center;
       align-items: center;
       z-index: 9;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.5s ease, visibility 0.5s ease;
+    }
+    .modal.show {
+      opacity: 1;
+      visibility: visible;
     }
     .modal video {
       max-width: 90%;
@@ -627,8 +636,8 @@
     document.getElementById('videoModal').addEventListener('click', (event) => {
       if (event.target === document.getElementById('videoModal')) {
         const videoPlayer = document.getElementById('videoPlayer');
+        videoModal.classList.toggle('show');
         videoPlayer.pause();
-        videoModal.style.display = 'none';
       }
     });
     
@@ -638,12 +647,14 @@
       
       var videosrc = imgElement.src;
       videoPlayer.src = videosrc.substring(0 , videosrc.length - 14) + '1.mp4';
-      videoModal.style.display = 'flex';
+      videoModal.classList.toggle('show');
       videoPlayer.play();
     }
     
     // 圖片載入失敗時重試
     function retryLoadImage(imgElement, imageUrl, retries) {
+      const parentele = imgElement.parentElement;
+      const extele = parentele.parentElement;
       if (retries > 0) {
         //console.warn(`圖片載入失敗，重試中 (${4 - retries}/3):`, imageUrl);
         setTimeout(() => {
@@ -662,10 +673,10 @@
         imgElement.className = 'imgerr';
         
         imgElement.parentNode.className = "divimgerr";
-        imgElement.parentElement.prepend(err);
+        parentele.prepend(err);
         
-        if (imgElement.parentElement.getElementsByClassName("ext")[0].innerHTML == '(mp4)') {
-          imgElement.parentElement.getElementsByClassName("ext")[0].innerHTML = '(unknown)';
+        if (extele.getElementsByClassName("ext")[0].innerHTML == '(mp4)') {
+          extele.getElementsByClassName("ext")[0].innerHTML = '(unknown)';
           imgElement.title = imageUrl.substring(0 , imageUrl.length - 6);
         }
       }
@@ -673,6 +684,8 @@
     function retryLoadMedia(imgElement, imageUrl, retries, currentExtensionIndex = 0) {
       const extensions = ['jpeg', 'png', 'gif'];
       const maxRetries = 3;
+      const parentele = imgElement.parentElement;
+      const extele = parentele.parentElement;
       
       if (currentExtensionIndex < extensions.length) {
         const ex = extensions[currentExtensionIndex];
@@ -689,7 +702,7 @@
               retryLoadMedia(imgElement, imageUrl, retries - 1, currentExtensionIndex);
             };
             
-            imgElement.parentElement.getElementsByClassName("ext")[0].innerHTML = '(' + ex + ')';
+            extele.getElementsByClassName("ext")[0].innerHTML = '(' + ex + ')';
           }, 100); // 0.1 seconds before retry
         } else {
           // If retries for the current extension are exhausted, move to the next extension
@@ -701,10 +714,10 @@
         
         var play_btn = document.createElement("div");
         play_btn.className = 'play-button';
-        imgElement.parentElement.prepend(play_btn);
-        imgElement.parentElement.classList.add('video-thumbnail-container');
+        imgElement.insertAdjacentElement("afterend", play_btn);
         
-        imgElement.parentElement.getElementsByClassName("ext")[0].innerHTML = '(mp4)';
+        parentele.classList.add('video-thumbnail-container');
+        extele.getElementsByClassName("ext")[0].innerHTML = '(mp4)';
         imgElement.setAttribute('onclick','playvideo(this)');
         retryLoadImage(imgElement, imageUrl + ".2.jpeg", maxRetries);
         imgElement.className = "jsonimg";
@@ -730,9 +743,8 @@
         var span = document.createElement("span");
         span.className = 'ext';
         span.innerText = '(jpeg)';
-        m.appendChild(span);
         
-        return m.outerHTML;
+        return m.outerHTML + span.outerHTML;
       }
       return '[Media file path: ' + e + ']';
     }
@@ -935,8 +947,7 @@
             
             var tempDiv = document.createElement('div');
             tempDiv.innerHTML = media(v_doc_id);
-            var newElement = tempDiv.firstChild;
-            quote.appendChild(newElement);
+            quote.appendChild(tempDiv);
           }
           
           e = doc.body.innerHTML;
@@ -1090,6 +1101,7 @@
             div.appendChild(img);
             
             var span = document.createElement("span");
+            span.className = 'ext';
             span.innerText = '(gif)';
             div.appendChild(span);
             
