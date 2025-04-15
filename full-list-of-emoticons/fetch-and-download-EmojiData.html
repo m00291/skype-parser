@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Emoji Mapping</title>
+</head>
+<body>
+  <script>
+    async function fetchEmojiData() {
+      const url          = 'https://raw.githubusercontent.com/m00291/skype-parser/main/full-list-of-emoticons/full-list-of-emoticons.html';
+      const baseImageUrl = 'https://raw.githubusercontent.com/m00291/skype-parser/main/full-list-of-emoticons/full-list-of-emoticons/';
+
+      try {
+        const response = await fetch(url);
+        const htmlText = await response.text();
+
+        // Parse the HTML
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(htmlText, 'text/html');
+
+        const emojiMapping = {};
+        const rows = doc.querySelectorAll('table.banded tbody tr');
+
+        rows.forEach((row, index) => {
+          if (index === 0) return; // Skip the header row
+
+          const imageElement = row.querySelector('img');
+          const nameElement = row.cells[1].querySelector('p');
+          const shortcutsElements = row.cells[2].querySelectorAll('p');
+
+          const imageUrl = baseImageUrl + imageElement.src.split('/').pop(); // Construct full URL
+          const name = nameElement.innerText.trim().replace(/\s+/g, '_').toLowerCase(); // Normalize name
+
+          const shortcuts = Array.from(shortcutsElements)
+            .map(el => el.innerText.trim())
+            .filter(text => text) // Remove empty strings
+            .flatMap(text => text.toLowerCase().split(' ')); // Split multiple shortcuts
+
+          // Create a unique key for each emoji
+          const key = `${name}_${index}`;
+          
+          emojiMapping[key] = {
+            name: name,
+            shortcuts: shortcuts,
+            imageUrl: imageUrl
+          };
+        });
+
+        // Sort the emojiMapping object by keys
+        const sortedEmojiMapping = Object.keys(emojiMapping)
+          .sort()
+          .reduce((sortedObj, key) => {
+            sortedObj[key] = emojiMapping[key];
+            return sortedObj;
+          }, {});
+
+        function downloadJSON(data, filename) {
+          const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = filename;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+        }
+
+        // Auto-download the JSON file
+        downloadJSON(sortedEmojiMapping, 'emojiMapping.json');
+      } catch (error) {
+        console.error('Error fetching or parsing data:', error);
+      }
+    }
+    fetchEmojiData();
+  </script>
+</body>
+</html>
