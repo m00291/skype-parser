@@ -5,7 +5,8 @@
 > make history json easy to read
 
 > `Original Skype Parser`  
-> from https://secure.skype.com/en/data-export
+> from https://secure.skype.com/en/data-export  
+> from https://go.skype.com/skype-parser
 
 > `full list of emoticons`  
 > from https://support.microsoft.com/en-us/skype/what-is-the-full-list-of-emoticons-01af0c65-529f-4a4d-8e3a-a393033a359a
