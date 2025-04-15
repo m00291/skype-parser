@@ -1,0 +1,1448 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Archived conversations</title>
+  <meta charset="utf-8">
+  <meta content="default-src 'self';
+    base-uri 'none';
+    frame-ancestors: 'none';
+    block-all-mixed-content">
+
+  <style>
+    .backform {
+      text-align: center;
+      height: 35px;
+      width: 35px;
+      border-radius: 50%;
+      border: 1px solid;
+      font-family: fangsong;
+      font-size: 25px;
+      cursor: pointer;
+      color: gray;
+    }
+    .backform:hover {
+      background-color: #b4cff5;
+      border: 1px solid #b4cff5;
+      color: white;
+    }
+    .phonecall {
+      display: inline;
+      padding-right: 25px;
+    }
+    .call_start {
+      filter: invert(90%) sepia(100%) saturate(30%) brightness(69%) contrast(147%);
+    }
+    .call_end {
+      padding-left: 8px;
+      padding-right: 2px;
+      rotate: 137deg;
+      filter: invert(50%) sepia(68%) saturate(87%) brightness(38%) contrast(147%);
+      position: absolute;
+    }
+    .call_miss_container {
+      display: inline;
+      padding-right: 4px;
+    }
+    .call_cross {
+      z-index: 7;
+      padding-left: 22px;
+      padding-right: 2px;
+      rotate: 200deg;
+      font-size: 24px;
+      font-family: cursive;
+      position: absolute;
+    }
+    @font-face {
+      font-family: "Segoe UI Local";
+      font-weight: 200;
+      src: local("Segoe UI Light");
+    }
+    @font-face {
+      font-family: "Segoe UI Local";
+      font-weight: 400;
+      src: local("Segoe UI");
+    }
+    @font-face {
+      font-family: "Segoe UI Local";
+      font-weight: 600;
+      src: local("Segoe UI Semibold");
+    }
+    body, html {
+      height: 100%;
+    }
+    body {
+      background-color: #f2f2f2;
+      font: 1em "Segoe UI Local", "Segoe WP", "Segoe UI Web", Tahoma, "Helvetica Neue", Helvetica, "Meiryo UI", Meiryo, Arial Unicode MS, sans-serif;
+      width: 100%;
+      margin: 0 auto;
+    }
+    body.conversation {
+      overflow-x: hidden;
+    }
+    .left {
+      display: block;
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 30%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+    }
+    .right {
+      display: block;
+      position: absolute;
+      right: 0;
+      top: 0;
+      width: 70%;
+      height: 100%;
+      overflow: hidden;
+    }
+    div#selected-conversation-placeholder {
+      display: block;
+      width: 100%;
+      top: 120px;
+      bottom: 0;
+      position: absolute;
+      overflow: auto;
+    }
+    .object {
+      width: 100%;
+      height: 98%;
+      overflow-x: hidden;
+      overflow-x: hidden;
+    }
+    body.index {
+      overflow: hidden;
+    }
+    div.header {
+      position: fixed;
+      top: 0;
+      left: 1rem;
+      width: 100%;
+      background-color: #f2f2f2;
+      margin-bottom: 1rem;
+      padding-bottom: 1rem;
+    }
+    h1 {
+      color: #0b0b10;
+      font-size: 1.5em;
+      top: 0;
+      left: 1rem;
+      padding-top: 1rem;
+      margin-top: 0;
+      margin-bottom: 1rem;
+      width: 100%;
+      background-color: #f2f2f2;
+    }
+    h1.conversations {
+      position: static;
+      margin-bottom: 0;
+      margin-bottom: 0;
+    }
+    div.author {
+      color: #626f82;
+      padding-bottom: .5rem;
+    }
+    div.quote:before {
+      display: block;
+      height: 0;
+      content: "“";
+      margin-left: -1.5rem;
+      font: italic 50px/1 Georgia, serif;
+      color: #999;
+    }
+    div.quote {
+      font-style: italic;
+      margin-left: 1.5rem;
+      margin-bottom: .5rem;
+    }
+    span.author {
+      color: #626f82;
+    }
+    span.timestamp {
+      color: #626f82;
+      padding-left: .5rem;
+      font-size: small;
+    }
+    span.deleted {
+      color: #626f82;
+      font-size: small;
+    }
+    span.timestamp-conv {
+      color: #626f82;
+      padding-left: .5rem;
+      font-size: small;
+    }
+    span.messageCount {
+      color: #626f82;
+      font-size: small;
+    }
+    span.at:before {
+      content: "@";
+    }
+    span.at {
+      font-style: italic;
+      color: #626f82;
+    }
+    ul {
+      list-style-type: none;
+      padding-left: 1rem;
+      padding-right: 1rem;
+      margin-top: 1rem;
+      margin-bottom: 2rem;
+      padding-bottom: 2rem;
+    }
+    ul.conversations {
+      position: absolute;
+      top: 8rem;
+      bottom: 0;
+      width: 90%;
+      overflow-y: scroll;
+    }
+    li.message {
+      color: #0b0b10;
+      margin: .5rem auto;
+      display: grid;
+      justify-content: start;
+    }
+    .message-author {
+      background-color: #fff;
+      width: fit-content;
+      border-radius: 15px;
+      border-bottom-left-radius: 0px;
+      border-bottom-right-radius: 0px;
+      padding: 0.5rem 1rem 1rem;
+      margin-bottom: -1rem;
+    }
+    .message-deleted {
+      background-color: #e5e5e5;
+      width: fit-content;
+      border-radius: 15px;
+      padding: 0.5rem 1rem;
+    }
+    .message-body {
+      word-break: break-all;
+      background-color: #fff;
+      border-radius: 15px;
+      border-top-left-radius: 0px;
+      padding: 0.5rem 1rem;
+      max-width: 800px;
+    }
+    .emotions {
+      display: flex;
+    }
+    .emotions_json {
+      display: none;
+    }
+    .urlpreviews {
+      margin-top: 10px;
+      padding: 10px;
+      border-radius: 8px;
+      background-color: #f0f0f0;
+      border: 1px solid #e0e0e0;
+      width: fit-content;
+      max-width: 500px;
+      word-break: break-word;
+      display: none;
+    }
+    .url-title {
+        font-size: 1.1em;
+        font-weight: bold;
+        color: #333;
+        margin-bottom: 5px;
+    }
+    .url-description {
+        font-size: 0.9em;
+        color: #666;
+    }
+    li.conversations {
+      background-color: #f2f2f2;
+      color: #0b0b10;
+      padding-left: .25rem;
+      padding-top: .5rem;
+      padding-bottom: .5rem;
+      margin: 0 auto;
+      word-wrap: break-word;
+      border-bottom-style: solid;
+      border-bottom-width: thin;
+      border-bottom-color: #626f82;
+    }
+    li.conversations-sel {
+      background-color: #c7edfc;
+      color: #0b0b10;
+      padding-left: .25rem;
+      padding-top: .5rem;
+      padding-bottom: .5rem;
+      margin: 0 auto;
+      word-wrap: break-word;
+      border-bottom-style: solid;
+      border-bottom-width: thin;
+      border-bottom-color: #626f82;
+    }
+    .form {
+      position: absolute;
+      display: block;
+      top: 100px;
+      left: 50px;
+      right: 50px;
+      text-align: left;
+    }
+    .form fieldset {
+      border-radius: 5px;
+      border-color: #626f82;
+      background-color: #c7edfc;
+    }
+    .primaryCta:hover,
+    .promo a:hover .promo-link {
+      color: #fff;
+      background-color: #0b64a4;
+    }
+    .btn {
+      box-sizing: border-box;
+      border: 1px solid transparent;
+      border-radius: 100px;
+      cursor: pointer;
+      display: inline-block;
+      font-size: 16px;
+      font-weight: 600;
+      line-height: 24px;
+      position: relative;
+      text-align: center;
+      text-decoration: none !important;
+      word-wrap: break-word;
+      padding: 12px 30px;
+    }
+    .primaryCta {
+      color: #fff;
+      background-color: #0078ca;
+    }
+    #progress {
+      display: none;
+    }
+    pre {
+      display: inline;
+    }
+    ul.details {
+      list-style-type: circle;
+      padding-left: 1rem;
+      padding-right: 1rem;
+      padding-top: 0;
+      margin-top: 0;
+      margin-bottom: 10px;
+      padding-bottom: 10px;
+    }
+    #selected-conversation-header {
+      margin-top: 50px;
+    }
+    .step-1,
+    .step-2 {
+      display: none;
+    }
+    .imggif {
+      height: 80px;
+      width: 80px;
+    }
+    .imgerr {
+      max-width: 200px;
+      max-height: 20px;
+    }
+    .divimgerr {
+      display: flex;
+      flex-direction: column;
+    }
+    .divimgerr .play-button {
+      display: none;
+    }
+    .step-1.form ol li {
+      margin-top: 10px;
+      margin-bottom: 10px;
+    }
+    input[type="text"] {
+      width: 250px;
+      padding: 10px;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      outline: none;
+    }
+  </style>
+  <style>
+    .file-upload {
+      text-align: center;
+    }
+
+    .file-drop-area {
+      border: 2px dashed #007BFF;
+      border-radius: 8px;
+      padding: 30px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    .file-drop-area:hover {
+      border: 2px dashed #007bff00;
+      background-color: #007bff1f;
+    }
+
+    .file-drop-area.active {
+      border: 2px dashed #007bff00;
+      background-color: #007bff1f;
+    }
+
+    .form fieldset.active {
+      border: 2px dashed #007BFF;
+      transition: 0.3s;
+    }
+
+    .file-label {
+      font-size: 16px;
+      color: #333;
+    }
+
+    .file-input {
+      display: none;
+    }
+
+    .file-name {
+      margin-top: 20px;
+      font-size: 16px;
+      color: #555;
+      word-wrap: break-word;
+    }
+    .media-container {
+      width: 100%;
+      max-width: 800px;
+    }
+    .jsonimg {
+      max-width: 100%;
+    }
+    .ext {
+      color: #626f82;
+      font-size: small;
+      display: block;
+    }
+    .emoji {
+      border: 0;
+      box-shadow: unset;
+      display: inline;
+      border-radius: 50%;
+    }
+    img, video {
+      display: block;
+      border: 2px solid #ddd;
+      border-radius: 5px;
+      box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
+    }
+    video {
+      background: black;
+    }
+    .quote-container {
+      background: #647fff5c;
+      padding: 10px;
+      box-shadow: 2px 2px 10px 4px rgba(0, 0, 0, 0.1);
+      width: fit-content;
+      word-break: break-all;
+      border-radius: 10px;
+      z-index: 2;
+      position: relative;
+    }
+    .attachment_container {
+      background: #5b5b5b5c;
+      padding: 1rem;
+      width: fit-content;
+      word-break: break-all;
+      border-radius: 10px;
+    }
+    .redirect_icon {
+      color: gray;
+      margin-right: 5px;
+      font-size: 20px;
+      font-weight: bold;
+      transform: scaleY(-1);
+      display: inline-block;
+    }
+    legacyquote:hover a.msgredirect span {
+      color: black;
+    }
+    legacyquote a {
+      display: flex;
+      text-decoration: none;
+    }
+    legacyquote {
+      display: flex;
+      align-items: center;
+    }
+  </style>
+  <style>
+    /* Loading spinner styles */
+    #message-loader {
+      text-align: center;
+      padding: 30px;
+      color: #626f82;
+    }
+    .spinner {
+      margin: 20px auto;
+      width: 70px;
+      text-align: center;
+    }
+    .spinner > div {
+      width: 18px;
+      height: 18px;
+      background-color: #0078ca;
+      border-radius: 100%;
+      display: inline-block;
+      animation: sk-bouncedelay 1.4s infinite ease-in-out both;
+    }
+    .spinner .bounce1 {
+      animation-delay: -0.32s;
+    }
+    .spinner .bounce2 {
+      animation-delay: -0.16s;
+    }
+    @keyframes sk-bouncedelay {
+      0%, 80%, 100% { 
+        transform: scale(0);
+      } 40% { 
+        transform: scale(1.0);
+      }
+    }
+    
+    .video-thumbnail-container {
+      position: relative;
+      display: inline-block;
+      background-color: rgb(0 0 0 / 80%);
+      border-radius: 5px;
+    }
+    /* Play button overlay */
+    .play-button {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 60px;
+      height: 60px;
+      background-color: rgb(0 0 0 / 40%);
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      pointer-events: none; /* Allows clicks to pass through to the image */
+    }
+    /* Play triangle inside the button */
+    .play-button::after {
+      content: '';
+      display: block;
+      width: 0;
+      height: 0;
+      border-top: 15px solid transparent;
+      border-bottom: 15px solid transparent;
+      border-left: 25px solid rgb(255 255 255 / 50%);
+      margin-left: 5px; /* Adjust for centering */
+    }
+    .video-thumbnail {
+      cursor: pointer;
+      max-width: 450px;
+      transition: 0.5s;
+    }
+    .video-thumbnail:hover {
+      opacity: 70%;
+    }
+    .modal {
+      display: flex;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.44);
+      justify-content: center;
+      align-items: center;
+      z-index: 9;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.5s ease, visibility 0.5s ease;
+    }
+    .modal.show {
+      opacity: 1;
+      visibility: visible;
+    }
+    .modal video {
+      max-width: 90%;
+      max-height: 90%;
+    }
+  </style>
+</head>
+<body>
+  <div class="left step-2">
+    <div class="header">
+      <h1 class="conversations">
+        <button class="backform" onclick="window.location.reload()"><</button>
+        Archived conversations
+      </h1>
+      <table class="step-2">
+        <tbody>
+          <tr>
+            <th>User</th>
+            <td id="hdr-user"></td>
+          </tr>
+          <tr>
+            <th>Exported</th>
+            <td id="hdr-exported"></td>
+          </tr>
+          <tr>
+            <th>Total</th>
+            <td id="hdr-stats"></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <ul class="conversations step-2" id="conversations"></ul>
+  </div>
+  <div id="selected-conversation step-2" class="right">
+    <h1 class="conversation step-2" id="selected-conversation-header"></h1>
+    <div id="selected-conversation-placeholder" class="step-2">
+      <div class="modal" id="videoModal">
+        <video id="videoPlayer" controls>
+          <source src="" type="video/mp4">
+          Your browser does not support the video tag.
+        </video>
+      </div>
+      <ul class="messages" id="messages"></ul>
+    </div>
+  </div>
+  <div class="step-1 form">
+    <form id="jsonFile" name="jsonFile" enctype="multipart/form-data" method="post">
+      <fieldset>
+        <h3>View your Skype conversation history export</h3>
+        <ol>
+          <li>Request an <a href="https://go.skype.com/export" target="_blank">export of your Skype conversations</a></li>
+          <li>Once available, <a href="https://go.skype.com/export" target="_blank">download the exported file</a></li>
+          <li>
+            Unpack the TAR file
+            <ul class="details">
+              <li>On Windows, you can use the free <a href="https://www.7-zip.org/" target="_blank">7-zip</a> or similar tool</li>
+              <li>On Mac, you can double-click the file to extract it</li>
+            </ul>
+          </li>
+          <li><strong>Select the&nbsp;</strong><pre>messages.json</pre><strong>&nbsp;file from the export:&nbsp;</strong>
+            <div class="file-upload">
+              <div class="file-drop-area" id="drop-area">
+                <p class="file-label">Drag & Drop JSON File Here</p>
+                <input type="file" accept=".json" id="fileinput" class="file-input">
+              <span class="file-name" id="file-name">No file selected</span>
+              </div>
+            </div>
+          </li>
+          <li>
+            <strong>(Optional) Media file path from the export: </strong><input type="text" id="filePath" placeholder="C:\path\media">
+            <div style="color: #555;">( eg: C:\Users\username\Desktop\username_export\media )</div>
+          </li>
+          <li><strong>Click the&nbsp;</strong><input type="button" id="btnLoad" value="Load" class="btn primaryCta"></li>
+        </ol>
+        <br>
+        <div id="progress">Processing...</div>
+      </fieldset>
+    </form>
+  </div>
+  
+  <script type="text/javascript">
+    const maxRetries = 2; // minimum 1 for switching extensions
+    
+    const emojiMappingUrl = 'https://raw.githubusercontent.com/m00291/skype-parser/main/full-list-of-emoticons/emojiMapping.json';
+    const emojiCache = {};
+    let emojiMapping = null; // Variable to store the mapping
+    let isLoading = false; // Flag to prevent multiple fetch calls
+
+    // Load emoji mapping
+    function loadEmojiMapping(callback) {
+      if (emojiMapping) {
+        // If already loaded, call the callback immediately
+        callback(emojiMapping);
+        return;
+      }
+
+      if (isLoading) {
+        // If loading is in progress, just return
+        return;
+      }
+
+      isLoading = true; // Set loading flag
+
+      fetch(emojiMappingUrl)
+        .then(response => response.json())
+        .then(data => {
+          emojiMapping = data; // Store the fetched mapping
+          isLoading = false; // Reset loading flag
+          callback(emojiMapping);
+        })
+        .catch(error => {
+          //console.error('Error loading emoji mapping:', error);
+          isLoading = false; // Reset loading flag on error
+        });
+    }
+    function replaceShortcuts(content) {
+      return content.replace(/<ss[^>]*>([^<]+)<\/ss>/g, (match, shortcut) => {
+        shortcut = shortcut.toLowerCase().trim(); // Normalize shortcut
+
+        // Find the corresponding emoji key
+        for (const key in emojiMapping) {
+          if (emojiMapping[key].shortcuts.includes(shortcut)) {
+            // Check if the image is cached
+            if (!emojiCache[key]) {
+              const img = document.createElement('img');
+              img.src = emojiMapping[key].imageUrl;
+              img.alt = shortcut;
+              img.className = 'emoji';
+              img.setAttribute('loading','lazy');
+
+              // Cache the image
+              emojiCache[key] = img; // Store in cache
+              console.log(key + '⚠️Store in cache');
+            }
+            console.log(key + '✅Used cache');
+            return emojiCache[key].outerHTML; // Use cached image HTML
+          }
+        }
+        return match; // Return original if no mapping found
+      });
+    }
+    
+    document.getElementById('videoModal').addEventListener('click', (event) => {
+      if (event.target === document.getElementById('videoModal')) {
+        const videoPlayer = document.getElementById('videoPlayer');
+        videoModal.classList.toggle('show');
+        videoPlayer.pause();
+      }
+    });
+    
+    function playvideo(imgElement) {
+      const videoModal = document.getElementById('videoModal');
+      const videoPlayer = document.getElementById('videoPlayer');
+      
+      var videosrc = imgElement.src;
+      videoPlayer.src = videosrc.substring(0 , videosrc.length - 14) + '1.mp4';
+      videoModal.classList.toggle('show');
+      videoPlayer.play();
+    }
+    
+    // 圖片載入失敗時重試
+    function retryLoadImage(imgElement, imageUrl, retries, e) {
+      //console.clear(); // comment this line to view log
+      
+      const parentele = imgElement.parentElement;
+      const extele = parentele.parentElement;
+      if (retries > 0) {
+        //console.info(`載入中(${maxRetries - retries + 1}/${maxRetries}):`, e);
+        setTimeout(() => {
+          imgElement.src = imageUrl + "?retry=" + (maxRetries - retries + 1); // 加入參數避免瀏覽器快取
+          imgElement.onerror = function () {
+            retryLoadImage(imgElement, imageUrl, retries - 1, e);
+          };
+        }, 100); // 0.1 秒後重試
+      } else {
+        //console.error(`載入失敗(${maxRetries}/${maxRetries}):`, e);
+        
+        imgElement.title = e;
+        imgElement.className = 'imgerr';
+        
+        imgElement.parentNode.className = "divimgerr";
+        
+        try {
+          var ext = extele.getElementsByClassName("ext")[0];
+          if (ext.innerHTML == '(mp4)') {
+            ext.innerHTML = '(unknown)';
+            imgElement.setAttribute('onclick','');
+          }
+          ext.innerHTML += '(error 404)';
+        } catch(err) {}
+      }
+    }
+    function retryLoadMedia(imgElement, imageUrl, retries, e, currentExtensionIndex = 0) {
+      //console.clear(); // comment this line to view log
+      
+      const extensions = ['jpeg', 'png', 'gif'];
+      const parentele = imgElement.parentElement;
+      const extele = parentele.parentElement;
+      
+      if (currentExtensionIndex < extensions.length) {
+        const ex = extensions[currentExtensionIndex];
+        
+        if (retries > 0) {
+          //console.info(`載入中(${maxRetries - retries + 1}/${maxRetries}):`, `${e}.1.${ex}`);
+          setTimeout(() => {
+            imgElement.src = imageUrl + ".1." + ex + "?retry=" + (maxRetries - retries + 1); // Adding parameter to avoid browser cache
+            if (currentExtensionIndex == 2) {
+              imgElement.className = "imggif";
+            }
+            imgElement.onerror = function () {
+              retryLoadMedia(imgElement, imageUrl, retries - 1, e, currentExtensionIndex);
+            };
+            
+            try {
+              extele.getElementsByClassName("ext")[0].innerHTML = '(' + ex + ')';
+            } catch (err) {}
+          }, 100); // 0.1 seconds before retry
+        } else {
+          // If retries for the current extension are exhausted, move to the next extension
+          //console.warn(`載入失敗: ${e}.1.${ex}, 嘗試下一個擴展名`);
+          retryLoadMedia(imgElement, imageUrl, maxRetries, e, currentExtensionIndex + 1);
+        }
+      } else {
+        //console.warn(`${e} 載入失敗:`, extensions.join(", "));
+        
+        var play_btn = document.createElement("div");
+        play_btn.className = 'play-button';
+        imgElement.insertAdjacentElement("afterend", play_btn);
+        
+        parentele.classList.add('video-thumbnail-container');
+        try {
+          extele.getElementsByClassName("ext")[0].innerHTML = '(mp4)';
+        } catch (err) {}
+        imgElement.setAttribute('onclick','playvideo(this)');
+        retryLoadImage(imgElement, imageUrl + ".2.jpeg", maxRetries, e);
+        imgElement.className = "jsonimg";
+        imgElement.classList.add('video-thumbnail');
+      }
+    }
+    
+    function media(e) {
+      var p = document.getElementById("filePath").value;
+      if (p) {
+        var long_e = p + (p.endsWith('\\') ? '' : '\\') + e;
+        var m = document.createElement("div");
+        m.className = "media-container";
+        
+        // For images
+        const img = new Image();
+        img.src = long_e + '.1.jpeg';
+        img.className = "jsonimg";
+        img.setAttribute('onerror', `retryLoadMedia(this, '${long_e.replace(/\\/g, '\\\\')}', ${maxRetries}, '${e}')`);
+        img.setAttribute('onload', 'this.title = this.src');
+        //img.setAttribute('loading','lazy');
+        m.appendChild(img);
+        
+        var span = document.createElement("span");
+        span.className = 'ext';
+        span.innerText = '(jpeg)';
+        
+        return m.outerHTML + span.outerHTML;
+      }
+      return '[Media file path: ' + e + ']';
+    }
+    
+    // Function to create and show a loading spinner
+    function showLoading(container) {
+      const loader = document.createElement('div');
+      loader.id = 'message-loader';
+      loader.innerHTML = `
+        <div class="spinner">
+          <div class="bounce1"></div>
+          <div class="bounce2"></div>
+          <div class="bounce3"></div>
+        </div>
+        <p>Loading messages...</p>
+      `;
+      container.innerHTML = '';
+      container.appendChild(loader);
+    }
+    
+    !function() {
+      "use strict";
+      function c(e) {
+        return e.displayName ? e.displayName == "  " ? "　" : u(e.displayName) : p(e.id);
+      }
+      function m(e) {
+        e.preventDefault();
+        var t = parseInt(e.target.getAttribute("data-conv"), 10);
+        var n = document.getElementById("messages");
+        
+        // Show loading animation
+        showLoading(n);
+        
+        document.getElementById("selected-conversation-header").textContent = c(window.Skype.conversations[t]);
+        
+        // Get the message list
+        var a = window.Skype.conversations[t] && window.Skype.conversations[t].MessageList 
+              ? window.Skype.conversations[t].MessageList 
+              : [];
+        
+        // Use setTimeout to defer execution and prevent UI freezing
+        setTimeout(() => {
+          // Process messages in chunks to prevent UI freezing
+          const chunkSize = 500; // Process 500 messages at a time
+          const totalMessages = a.length;
+          let processedCount = 0;
+          
+          // Create a document fragment to improve rendering performance
+          const fragment = document.createDocumentFragment();
+          
+          function processChunk() {
+            const start = processedCount;
+            const end = Math.min(processedCount + chunkSize, totalMessages);
+            
+            for (let s = start; s < end; s++) {
+              if (("" !== a[s].content) && !(a[s].properties && "isserversidegenerated" in a[s].properties)) {
+                var r = document.createElement("li");
+                r.className = "message";
+                r.setAttribute("id", a[s].id);
+                var o = document.createElement("div");
+                o.className = "message-author";
+                r.appendChild(o);
+                var i = document.createElement("span");
+                i.className = "author";
+                i.textContent = p(a[s].displayName !== null ? a[s].displayName : a[s].from);
+                o.appendChild(i);
+                var l = document.createElement("span");
+                l.className = "timestamp";
+                l.textContent = new Date(a[s].originalarrivaltime).toLocaleString("en-GB", { hour12: true });
+                o.appendChild(l);
+                if (a[s].properties && "edittime" in a[s].properties) {
+                  var et = document.createElement("span");
+                  et.className = "timestamp";
+                  const date = new Date(parseInt(a[s].properties.edittime));
+                  et.textContent = '(' + date.toLocaleString("en-GB", { hour12: true }) + ' edited)';
+                  o.appendChild(et);
+                }
+                var d = document.createElement("div");
+                d.className = "message-body";
+                
+                var urlpreviews_s = '';
+                if (a[s].properties && "urlpreviews" in a[s].properties) {
+                  urlpreviews_s = '<div class="urlpreviews">' + a[s].properties.urlpreviews + '</div>';
+                }
+                
+                var emotions_s = '';
+                if (a[s].properties && "emotions" in a[s].properties) {
+                  emotions_s = '<div class="emotions">[emotions]</div><div class="emotions_json">' + JSON.stringify(a[s].properties.emotions) + '</div>';
+                }
+                
+                var isForwarded_s = '';
+                if (a[s].properties && "forwardMetadata" in a[s].properties) {
+                  isForwarded_s = "isForwarded:true";
+                }
+                
+                var Media_GenericFile_s = '';
+                if (a[s].messagetype === "RichText/Media_GenericFile") {
+                  Media_GenericFile_s = "<div class='attachment_container'></div>";
+                }
+                
+                if (a[s].messagetype === "RichText/Media_Album") {
+                  continue;
+                }
+                
+                d.innerHTML = a[s].amsreferences == null || a[s].messagetype === "RichText/Media_GenericFile"
+                            ? u(isForwarded_s + Media_GenericFile_s + a[s].content + urlpreviews_s + emotions_s)
+                            : media(a[s].amsreferences);
+                r.appendChild(d);
+                fragment.appendChild(r);
+              } else if ("" === a[s].content && a[s].properties && "deletetime" in a[s].properties) {
+                var r = document.createElement("li");
+                r.className = "message";
+                r.setAttribute("id", a[s].id);
+                var o = document.createElement("div");
+                o.className = "message-deleted";
+                r.appendChild(o);
+                var i = document.createElement("span");
+                i.className = "author";
+                i.textContent = p(a[s].displayName !== null ? a[s].displayName : a[s].from);
+                o.appendChild(i);
+                var l = document.createElement("span");
+                l.className = "timestamp";
+                l.textContent = new Date(parseFloat(a[s].properties.deletetime)).toLocaleString("en-GB", { hour12: true }) +" [deleted]";
+                o.appendChild(l);
+                fragment.appendChild(r);
+              }
+            }
+            
+            processedCount = end;
+            
+            // Update progress indicator
+            const progressElement = document.getElementById('message-loader');
+            if (progressElement) {
+              //progressElement.querySelector('p').textContent = `Loading messages... ${Math.round((processedCount / totalMessages) * 100)}%`;
+              progressElement.querySelector('p').textContent = `Loading messages... ${processedCount} / ${totalMessages}`;
+            }
+            
+            // If there are more messages to process, schedule the next chunk
+            if (processedCount < totalMessages) {
+              setTimeout(processChunk, 0);
+            } else {
+              // All chunks processed, render to DOM
+              n.innerHTML = '';
+              n.appendChild(fragment);
+              
+              // Scroll to top when finished
+              document.getElementById("selected-conversation-placeholder").scrollTop = 0;
+            }
+          }
+          
+          // Start processing the first chunk
+          processChunk();
+        }, 50);
+      }
+      function a(e, t) {
+        document.getElementById(e).textContent = t;
+      }
+      function p(e) {
+        return e.replace(/^8:/, "").replace(/^\d{2}:.+(@thread\.skype)/, "@thread.skype");
+      }
+      
+      //----------------------------------------------------------------------------------------
+      function u(e) {
+        var messageId;
+        const messageIdMatch = e.match(/messageid="(\d+)"/);
+        if (messageIdMatch) {
+          messageId = messageIdMatch[1];
+        }
+        
+        const isForwardedtrue = e.match(/isForwarded:true/);
+        
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(e, 'text/html');
+        
+        loadEmojiMapping(emojiMapping => {
+          e = replaceShortcuts(e);
+        });
+        
+        // show pictureupdate
+        try {
+          const pictureupdate = doc.getElementsByTagName("pictureupdate")[0];
+          const value = pictureupdate.getElementsByTagName("value")[0];
+          
+          if (value.textContent.length > 0) {
+            var newimg = document.createElement('img');
+            newimg.src = value.textContent.substring(4);
+            newimg.title = value.textContent.substring(4);
+            pictureupdate.removeChild(value);
+            pictureupdate.appendChild(document.createElement('br'));
+            pictureupdate.appendChild(newimg);
+            
+            e = doc.body.innerHTML;
+          }
+        } catch(err) {}
+        
+        // show quote > media
+        try {
+          const quote = doc.getElementsByTagName("quote")[0];
+          const URIObjectnode = quote.getElementsByTagName("URIObject")[0];
+          const v_doc_id = URIObjectnode.getAttribute("doc_id");
+          
+          if (URIObjectnode.getElementsByTagName("swift").length == 0) {
+            quote.removeChild(URIObjectnode);
+            
+            var tempDiv = document.createElement('div');
+            tempDiv.innerHTML = media(v_doc_id);
+            quote.appendChild(tempDiv);
+          }
+          
+          e = doc.body.innerHTML;
+        } catch(err) {}
+        
+        // show attachment
+        try {
+          const attachment_container = doc.getElementsByClassName("attachment_container")[0];
+          const a = doc.getElementsByTagName("URIObject")[0];
+          const filename = a.getElementsByTagName("OriginalName")[0].getAttribute("v");
+          const filesize = a.getElementsByTagName("FileSize")[0].getAttribute("v");
+          
+          if (filename.length > 0) {
+            var div = document.createElement('div');
+            div.innerHTML = 'File: ' + filename;
+            
+            attachment_container.appendChild(div);
+            
+            if (filesize) {
+              const bytes = parseInt(filesize, 10);
+              const megabytes = (bytes / (1024 * 1024)).toFixed(2);
+              
+              var size = document.createElement('div');
+              size.innerHTML = 'Size: ' + megabytes + 'MB';
+              attachment_container.appendChild(size);
+            }
+            
+            a.remove();
+            e = doc.body.innerHTML;
+          }
+        } catch(err) {}
+        
+        // show url preview
+        try {
+          const preview = doc.getElementsByClassName("urlpreviews")[0];
+          const previewjson = preview.innerHTML;
+          
+          if ("title" in JSON.parse(previewjson)[0].value) {
+            preview.style.display = 'block';
+            preview.innerHTML = '';
+            
+            var ti = document.createElement('div');
+            ti.className = 'url-title';
+            ti.innerHTML = JSON.parse(previewjson)[0].value.title;
+            
+            preview.append(ti);
+          }
+          
+          if ("description" in JSON.parse(previewjson)[0].value) {
+            var des = document.createElement('div');
+            des.className = 'url-description';
+            des.innerHTML = JSON.parse(previewjson)[0].value.description;
+            
+            preview.append(des);
+          }
+          
+          e = doc.body.innerHTML;
+        } catch(err) {}
+        
+        // sticker cannot be loaded
+        try {
+          const URIObjectnode = doc.getElementsByTagName("URIObject")[0];
+          const URIObjecturi = URIObjectnode.getAttribute("uri");
+          
+          if ((URIObjectnode.innerHTML.includes("已傳送貼圖給您")) || (URIObjectnode.innerHTML.includes("A sticker was sent"))) {
+
+            var img = document.createElement("img");
+            img.className = "imgerr";
+            img.src = URIObjecturi;
+            img.title = URIObjecturi;
+            
+            var m = document.createElement("span");
+            m.className = 'ext';
+            m.innerHTML = '(sticker)';
+            var s = document.createElement("span");
+            m.innerHTML += '(error 404)';
+            
+            var d = document.createElement("div");
+            d.className = "divimgerr";
+            d.appendChild(img);
+            d.appendChild(m);
+            d.appendChild(s);
+            
+            e = d.outerHTML;
+          }
+        } catch(err) {}
+        
+        // tag content replacement logic
+        const replacements = {
+          duration: function(content) {
+            const totalSeconds = parseFloat(content);
+            const hours = Math.floor(totalSeconds / 3600);
+            const minutes = Math.floor((totalSeconds % 3600) / 60);
+            const seconds = (totalSeconds % 60).toFixed(0);
+            return " (" + hours + "小時" + minutes + "分鐘" + seconds + "秒)";
+          },
+          legacyquote: function(content) {
+            const match = content.match(/\[(\d+)\]/);
+            
+            if (match) {
+              const date = new Date(parseInt(match[1], 10) * 1000);
+              const formattedDate = date.toLocaleString("en-GB", { hour12: true });
+              var icon = '<span class="redirect_icon">↩</span>';
+              if (isForwardedtrue) {
+                return '<a class>' + icon + '<span class="author">(Forwarded)' + content.replace(match[0], '') + '</span><span class="timestamp">' + formattedDate + '</span></a><br>';
+              } else {
+                return '<a class="msgredirect" href="#' + messageId + '">' + icon + '<span class="author">' + content.replace(match[0], '') + '</span><span class="timestamp">' + formattedDate + '</span></a><br>';
+              }
+            }
+            
+            return content;
+          },
+          eventtime: function(content) {
+            return " ";
+          },
+          contacts: function(content) {
+            const parser = new DOMParser();
+            const xmlDoc = parser.parseFromString(content, "text/xml");
+            const fValue = xmlDoc.getElementsByTagName("c")[0].getAttribute("f");
+            return "卡片[" + fValue + "]" + content;
+          },
+          // 處理 Base64 解碼
+          base64decode: function(content) {
+            try {
+              return atob(content);
+            } catch (e) {
+              //console.error("Base64 解碼失敗:", e);
+              return content; // 如果解碼失敗，返回原始內容
+            }
+          }
+        };
+
+        // 專門處理 Base64 解碼
+        var base64Regex = /b64="([^"]+)"/;
+        var match = base64Regex.exec(e);
+        
+        if (match && match[1]) {
+          var base64String = match[1];
+          var decodedContent = replacements.base64decode(base64String);
+          var imageUrl = JSON.parse(decodedContent).attachments[0].content.images[0].url;
+          
+          var div = document.createElement("div");
+          
+          try {
+            var img = document.createElement("img");
+            img.className = "imggif";
+            img.src = imageUrl;
+            img.setAttribute('onerror', `retryLoadImage(this, '${imageUrl}', ${maxRetries}, '${imageUrl}')`);
+            img.setAttribute('onload', 'this.title = this.src');
+            
+            div.className = "divgif";
+            div.appendChild(img);
+            
+            var span = document.createElement("span");
+            span.className = 'ext';
+            span.innerText = '(gif)';
+            div.appendChild(span);
+            
+          } catch (error) {
+            //console.error("解析 JSON 失敗:", error);
+            e = '<div>(decode base64 error)</div>';
+          }
+          
+          try {
+            const quote = doc.getElementsByTagName("quote")[0];
+            const URIObjectnode = quote.getElementsByTagName("URIObject")[0];
+            
+            if (URIObjectnode.getElementsByTagName("swift").length > 0) {
+              quote.removeChild(URIObjectnode);
+              quote.appendChild(div);
+              
+              e = doc.body.innerHTML;
+            }
+          } catch (error) {
+            e = div.outerHTML;
+          }
+        }
+
+        // tag content to replace
+        for (var tag in replacements) {
+          var regex = new RegExp("<" + tag + "(\\s+[^>]*?)?>(.*?)</" + tag + ">", 'g');
+          e = e.replace(regex, function(match, attrs, p1) {
+            return "<" + tag + (attrs ? attrs : "") + ">" + replacements[tag](p1) + "</" + tag + ">";
+          });
+        }
+        
+        // text replacement logic
+        const textreplacements = {
+          "<pictureupdate": function() {
+            return "變更圖片 <pictureupdate";
+          },
+          "<deletemember": function() {
+            return "交談移除 <deletemember";
+          },
+          "<topicupdate": function() {
+            return "交談重新命名 <topicupdate";
+          },
+          "<addmember": function() {
+            return "交談加入 <addmember";
+          },
+          '<partlist type=\\\"started': function() {
+            return '<span class="call_start" name="📞">📞</span>通話開始<partlist type=\\\"started';
+          },
+          '<partlist type=\\\"ended': function() {
+            return '<div class="phonecall"><span class="call_end" name="📞">📞</span></div>通話結束<partlist type=\\\"ended';
+          },
+          '<partlist type=\\\"missed': function() {
+            return '<div class="call_miss_container"><span class="call_cross">/</span><span class="call_miss" name="📞">📞</span></div>無人接聽<partlist type=\\\"missed';
+          },
+          '<part identity=': function() {
+            return '<br>參與者: <part identity=';
+          },
+          '<target>': function() {
+            return '<br><target>';
+          },
+          '<br><target>8:': function() {
+            return '<br><target>';
+          },
+          '<initiator>8:': function() {
+            return '<initiator>';
+          },
+          '<initiator>': function() {
+            return '<initiator>(';
+          },
+          '</initiator>': function() {
+            return ')</initiator>';
+          },
+          '<value>': function() {
+            return '<br><value>';
+          },
+          '<eventtime>': function() {
+            return '';
+          },
+          '<URIObject': function() {
+            return 'uriobject<URIObject';
+          },
+          '<joiningenabledupdate>': function() {
+            return 'joiningenabledupdate<joiningenabledupdate>';
+          },
+          '<historydisclosedupdate>': function() {
+            return 'historydisclosedupdate<historydisclosedupdate>';
+          },
+          '<botsSettings>': function() {
+            return '<br>botsSettings<botsSettings>';
+          },
+          '<MediaAlbum': function() {
+            return 'MediaAlbum<MediaAlbum';
+          },
+          '<quote ': function() {
+            return '<div class=\"quote-container\"><quote ';
+          },
+          '</quote>': function() {
+            return '</quote></div>';
+          },
+          '<legacyquote>\n\n&lt;&lt;&lt; </legacyquote>': function() {
+            return '';
+          },
+          '<legacyquote>\r\n\r\n&lt;&lt;&lt; </legacyquote>': function() {
+            return '';
+          },
+          '<a href=': function() {
+            return '<a target=\"_blank\" href=';
+          },
+          'isForwarded:true': function() {
+            return '';
+          }
+        };
+
+        // text to replace
+        for (var key in textreplacements) {
+          var textRegex = new RegExp(key, 'g');
+          e = e.replace(textRegex, textreplacements[key]);
+        }
+        
+        return e;
+      }
+      
+      function u2(e) {
+        return e;
+      }
+      
+      function u_original(e) {
+        return e.replace(/&apos;/g, "'").replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">");
+      }
+      function s(e, t) {
+        for (var n = document.getElementsByClassName(e), a = 0; a < n.length; a++) n[a].style.display = t ? "block" : "none";
+      }
+      document.getElementById("btnLoad").addEventListener("click", function() {
+        var e, t, n;
+        "function" == typeof window.FileReader ? (e = document.getElementById("fileinput")) && e.files ? e.files[0] ? (document.getElementById("progress").style.display = "block", t = e.files[0], (n = new FileReader).onload = function(e) {
+          var t = e.target.result;
+          !function(e) {
+            if (e && e.userId && e.conversations && e.exportDate) {
+              var t = new Date(e.exportDate),
+                n = e.conversations.filter(function(e) {
+                  return e.id && "ALL" !== e.id && !/@cast\.skype$/.test(e.id) && e.MessageList && e.MessageList.length;
+                });
+              a("hdr-user", p(e.userId)), a("hdr-exported", t.toLocaleString("en-GB", { hour12: true })), a("hdr-stats", n.length + " conversations"), function(e) {
+                for (var t = document.getElementById("conversations"), n = 0; n < e.length; n++) {
+                  var a = document.createElement("li");
+                  a.className = "conversations";
+                  var s = document.createElement("a");
+                  s.setAttribute("href", "#"), s.setAttribute("data-conv", n), s.className = "conv-link", s.textContent = c(e[n]), a.appendChild(s);
+                  var r = document.createElement("div");
+                  a.appendChild(r);
+                  var o = document.createElement("span");
+                  o.className = "messageCount";
+                  o.textContent = e[n].MessageList.length
+                                - e[n].MessageList.reduce((count, message) => {
+                                    return count
+                                         + (message.properties && message.properties.isserversidegenerated ? 1 : 0)
+                                         + (message.messagetype && message.messagetype === 'RichText/Media_Album' ? 1 : 0);
+                                  }, 0)
+                                + " messages";
+                  r.appendChild(o);
+                  var i = e[n].properties && e[n].properties.lastimreceivedtime ? e[n].properties.lastimreceivedtime : null;
+                  if (i) {
+                    var l = document.createElement("span");
+                    l.className = "timestamp-conv", l.textContent = "Last from: " + new Date(i).toLocaleString("en-GB", { hour12: true }), r.appendChild(l);
+                  }
+                  t.appendChild(a);
+                }
+                for (var d = document.getElementsByClassName("conv-link"), n = 0; n < d.length; n++) d[n].addEventListener("click", m);
+              }(n), window.Skype = {}, window.Skype.conversations = n, s("step-1", !1), s("step-2", !0);
+            } else {
+              alert("Sorry, we are unable to load this file");
+              document.getElementById("progress").style.display = "none";
+            }
+          }(JSON.parse(t));
+        }, n.readAsText(t, "utf8")) : (alert("Please select a file before clicking 'Load'"), document.getElementById("progress").style.display = "none") : alert("This browser doesn't seem to support the 'files' property of file inputs.") : alert("The file API isn't supported on this browser. Please use a more modern browser.");
+      }), s("step-2", !1), s("step-1", !0);
+    }();
+  </script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const inputBox = document.getElementById("filePath");
+
+      // Load saved value from localStorage
+      const savedpath = localStorage.getItem("temppath");
+      if (savedpath) {
+        inputBox.value = savedpath;
+      }
+
+      // Save input value on button click
+      inputBox.addEventListener("input", function (e) {
+        localStorage.setItem("temppath", inputBox.value);
+      });
+    });
+  </script>
+  <script>
+    const fileInput = document.getElementById("fileinput");
+    const dropArea = document.getElementById("drop-area");
+    const fulldropArea = document.getElementById("jsonFile").getElementsByTagName("fieldset")[0];
+    const fileNameText = document.getElementById("file-name");
+
+    // Show selected file name
+    function updateFileName(file) {
+      if (file) {
+        fileNameText.textContent = file.name;
+      } else {
+        fileNameText.textContent = "No file selected";
+      }
+    }
+
+    // Handle file selection
+    fileInput.addEventListener("change", function () {
+      updateFileName(this.files[0]);
+    });
+
+    // Simulate click when button is pressed
+    dropArea.addEventListener("click", function () {
+      fileInput.click();
+    });
+
+    // Drag & Drop functionality
+    
+    fulldropArea.addEventListener("dragover", (event) => {
+      event.preventDefault();
+      if (!dropArea.classList.contains("active")) {
+        dropArea.classList.add("active");
+        fulldropArea.classList.add("active");
+      }
+    });
+    
+    fulldropArea.addEventListener("dragleave", () => {
+      if (!fulldropArea.contains(event.relatedTarget)) {
+        dropArea.classList.remove("active");
+        fulldropArea.classList.remove("active");
+      }
+    });
+
+    function handleDrop(event) {
+      event.preventDefault();
+      dropArea.classList.remove("active");
+      fulldropArea.classList.remove("active");
+
+      if (event.dataTransfer.files.length > 0) {
+        let file = event.dataTransfer.files[0];
+        if (file.type === "application/json") {
+          fileInput.files = event.dataTransfer.files;
+          updateFileName(file);
+        } else {
+          alert("Please select a valid JSON file.");
+          fileInput.value = null;
+          updateFileName();
+        }
+      }
+    }
+    fulldropArea.addEventListener("drop", handleDrop);
+  </script>
+</body>
+</html>
