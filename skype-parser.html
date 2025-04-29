@@ -10,20 +10,32 @@
 
   <style>
     .backform {
-      text-align: center;
       height: 35px;
       width: 35px;
       border-radius: 50%;
       border: 1px solid;
-      font-family: fangsong;
-      font-size: 25px;
       cursor: pointer;
       color: gray;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: transparent;
+      padding: 0;
+      margin-right: 0.5em;
+    }
+    .backform svg {
+      width: 20px;
+      height: 20px;
+      stroke: gray;
+      transition: stroke 0.2s ease;
     }
     .backform:hover {
       background-color: #b4cff5;
       border: 1px solid #b4cff5;
       color: white;
+    }
+    .backform:hover svg {
+      stroke: white;
     }
     .phonecall {
       display: inline;
@@ -136,8 +148,8 @@
       background-color: #f2f2f2;
     }
     h1.conversations {
+      display: flex;
       position: static;
-      margin-bottom: 0;
       margin-bottom: 0;
     }
     div.author {
@@ -229,12 +241,6 @@
       padding: 0.5rem 1rem;
       max-width: 800px;
     }
-    .emotions {
-      display: flex;
-    }
-    .emotions_json {
-      display: none;
-    }
     .urlpreviews {
       margin-top: 10px;
       padding: 10px;
@@ -247,14 +253,14 @@
       display: none;
     }
     .url-title {
-        font-size: 1.1em;
-        font-weight: bold;
-        color: #333;
-        margin-bottom: 5px;
+      font-size: 1.1em;
+      font-weight: bold;
+      color: #333;
+      margin-bottom: 5px;
     }
     .url-description {
-        font-size: 0.9em;
-        color: #666;
+      font-size: 0.9em;
+      color: #666;
     }
     li.conversations {
       background-color: #f2f2f2;
@@ -422,17 +428,64 @@
       font-size: small;
       display: block;
     }
-    .emoji {
-      border: 0;
-      box-shadow: unset;
-      display: inline;
-      border-radius: 50%;
-    }
     img, video {
       display: block;
       border: 2px solid #ddd;
       border-radius: 5px;
       box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
+    }
+    .emoji {
+      border: 0;
+      box-shadow: unset;
+      display: inline;
+      border-radius: 0;
+    }
+    .emotions_marginbottom {
+      margin-bottom: 2.5em;
+    }
+    .emotions_block {
+      display: flex;
+      position: absolute;
+    }
+    .emotions_json {
+      display: none;
+    }
+    .emotions_box {
+      margin: 0px 3px;
+      padding: 3.5px;
+      width: 40px;
+      height: 40px;
+      background-color: white;
+      border-radius: 50%;
+      position: relative;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .emotions_box .emoji {
+      height: 80%;
+      width: 80%;
+    }
+    .emotions_tooltip {
+      visibility: hidden;
+      background-color: #333;
+      color: #fff;
+      text-align: left;
+      border-radius: 30px;
+      font-size: small;
+      padding: 0.5rem 1rem;
+      position: absolute;
+      z-index: 10;
+      top: 100%;
+      left: 0;
+      margin-top: 5px;
+      opacity: 0;
+      transition: opacity 0.2s;
+      white-space: nowrap;
+    }
+    .emotions_box:hover .emotions_tooltip {
+      visibility: visible;
+      opacity: 1;
     }
     video {
       background: black;
@@ -446,6 +499,7 @@
       border-radius: 10px;
       z-index: 2;
       position: relative;
+      margin-bottom: 5px;
     }
     .attachment_container {
       background: #5b5b5b5c;
@@ -577,8 +631,13 @@
   <div class="left step-2">
     <div class="header">
       <h1 class="conversations">
-        <button class="backform" onclick="window.location.reload()"><</button>
-        Archived conversations
+        <button class="backform" onclick="window.location.reload()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="15 18 9 12 15 6" />
+          </svg>
+        </button>
+        <div>Archived conversations</div>
       </h1>
       <table class="step-2">
         <tbody>
@@ -681,7 +740,7 @@
           isLoading = false; // Reset loading flag on error
         });
     }
-    function replaceShortcuts(content) {
+    function replaceemoji(content) {
       return content.replace(/<ss[^>]*>([^<]+)<\/ss>/g, (match, shortcut) => {
         shortcut = shortcut.toLowerCase().trim(); // Normalize shortcut
 
@@ -693,19 +752,60 @@
               const img = document.createElement('img');
               img.src = emojiMapping[key].imageUrl;
               img.alt = shortcut;
+              img.title = shortcut;
               img.className = 'emoji';
               img.setAttribute('loading','lazy');
 
               // Cache the image
               emojiCache[key] = img; // Store in cache
-              console.log(key + '⚠️Store in cache');
+              //console.log(key + '⚠️Store in cache');
             }
-            console.log(key + '✅Used cache');
+            //console.log(key + '✅Used cache');
             return emojiCache[key].outerHTML; // Use cached image HTML
           }
         }
         return match; // Return original if no mapping found
       });
+    }
+    function getEmojiImgByShortcut(shortcut) {
+      shortcut = shortcut.toLowerCase().trim();
+      shortcut = shortcut === 'clapskypesmilie' ? 'clap' : shortcut;
+      shortcut = shortcut === '2714_heavycheckmark' ? 'checkmark' : shortcut;
+
+      function findEmoji(shortcutToTry) {
+        for (const key in emojiMapping) {
+          const emoji = emojiMapping[key];
+          if (emoji.shortcuts.includes(`(${shortcutToTry})`) || emoji.shortcuts.includes(shortcutToTry)) {
+            if (!emojiCache[key]) {
+              const img = document.createElement('img');
+              img.src = emoji.imageUrl;
+              img.alt = shortcutToTry;
+              img.title = shortcutToTry;
+              img.className = 'emoji';
+              img.setAttribute('loading', 'lazy');
+              emojiCache[key] = img;
+            }
+            return emojiCache[key].cloneNode(); // Return a copy
+          }
+        }
+        return null;
+      }
+
+      // First attempt
+      let result = findEmoji(shortcut);
+
+      // If not found, try with your fallback transformation
+      if (!result) {
+        const transformedShortcut = shortcut.replace(/^.*?_/, '').replace(/:[^:]*$/, '');
+        result = findEmoji(transformedShortcut);
+      }
+
+      // If still not found, try 'skype'
+      if (!result) {
+        result = findEmoji('skype');
+      }
+
+      return result;
     }
     
     document.getElementById('videoModal').addEventListener('click', (event) => {
@@ -728,7 +828,6 @@
     
     // 圖片載入失敗時重試
     function retryLoadImage(imgElement, imageUrl, retries, e) {
-      //console.clear(); // comment this line to view log
       
       const parentele = imgElement.parentElement;
       const extele = parentele.parentElement;
@@ -759,7 +858,6 @@
       }
     }
     function retryLoadMedia(imgElement, imageUrl, retries, e, currentExtensionIndex = 0) {
-      //console.clear(); // comment this line to view log
       
       const extensions = ['jpeg', 'png', 'gif'];
       const parentele = imgElement.parentElement;
@@ -830,7 +928,22 @@
       }
       return '[Media file path: ' + e + ']';
     }
-    
+
+    function formatDate(timestamp) {
+      const date = new Date(timestamp);
+      const day = String(date.getDate());
+      const month = String(date.getMonth() + 1); // Months are 0-based
+      const year = date.getFullYear();
+
+      let hours = date.getHours();
+      const minutes = String(date.getMinutes()).padStart(2, '0');
+      const seconds = String(date.getSeconds()).padStart(2, '0');
+      const ampm = hours >= 12 ? 'PM' : 'AM';
+      hours = hours % 12 || 12;
+
+      return `${day}/${month}/${year} ${hours}:${minutes}:${seconds} ${ampm}`;
+    }
+
     // Function to create and show a loading spinner
     function showLoading(container) {
       const loader = document.createElement('div');
@@ -895,13 +1008,13 @@
                 o.appendChild(i);
                 var l = document.createElement("span");
                 l.className = "timestamp";
-                l.textContent = new Date(a[s].originalarrivaltime).toLocaleString("en-GB", { hour12: true });
+                l.textContent = formatDate(a[s].originalarrivaltime);
                 o.appendChild(l);
                 if (a[s].properties && "edittime" in a[s].properties) {
                   var et = document.createElement("span");
                   et.className = "timestamp";
                   const date = new Date(parseInt(a[s].properties.edittime));
-                  et.textContent = '(' + date.toLocaleString("en-GB", { hour12: true }) + ' edited)';
+                  et.textContent = '(' + formatDate(date) + ' edited)';
                   o.appendChild(et);
                 }
                 var d = document.createElement("div");
@@ -914,7 +1027,9 @@
                 
                 var emotions_s = '';
                 if (a[s].properties && "emotions" in a[s].properties) {
-                  emotions_s = '<div class="emotions">[emotions]</div><div class="emotions_json">' + JSON.stringify(a[s].properties.emotions) + '</div>';
+                  emotions_s = '<div class="emotions_block"></div><div class="emotions_json">' + JSON.stringify(a[s].properties.emotions) + '</div>';
+                  d.className = "message-body";
+                  d.classList.add("emotions_marginbottom");
                 }
                 
                 var isForwarded_s = '';
@@ -949,7 +1064,7 @@
                 o.appendChild(i);
                 var l = document.createElement("span");
                 l.className = "timestamp";
-                l.textContent = new Date(parseFloat(a[s].properties.deletetime)).toLocaleString("en-GB", { hour12: true }) +" [deleted]";
+                l.textContent = formatDate(parseFloat(a[s].properties.deletetime)) +" [deleted]";
                 o.appendChild(l);
                 fragment.appendChild(r);
               }
@@ -960,8 +1075,7 @@
             // Update progress indicator
             const progressElement = document.getElementById('message-loader');
             if (progressElement) {
-              //progressElement.querySelector('p').textContent = `Loading messages... ${Math.round((processedCount / totalMessages) * 100)}%`;
-              progressElement.querySelector('p').textContent = `Loading messages... ${processedCount} / ${totalMessages}`;
+              progressElement.querySelector('p').textContent = `Loading messages... ${processedCount} / ${totalMessages} (${Math.round((processedCount / totalMessages) * 100)}%)`;
             }
             
             // If there are more messages to process, schedule the next chunk
@@ -1002,8 +1116,45 @@
         const doc = parser.parseFromString(e, 'text/html');
         
         loadEmojiMapping(emojiMapping => {
-          e = replaceShortcuts(e);
+          e = replaceemoji(e);
         });
+        
+        // show emotions
+        try {
+          const emotions_block = doc.getElementsByClassName("emotions_block")[0];
+          const emotions_json = JSON.parse(doc.getElementsByClassName("emotions_json")[0].innerHTML);
+          
+          emotions_json.forEach(item => {
+            if (item.key !== 'reactionsConsumptionHorizon') {
+              const div = document.createElement('div');
+              div.className = 'emotions_box';
+
+              const emojiImg = getEmojiImgByShortcut(item.key);
+
+              if (emojiImg) {
+                div.appendChild(emojiImg);
+              } else {
+                div.textContent = '[emotions]' + item.key;
+              }
+
+              // Tooltip
+              const tooltip = document.createElement('div');
+              tooltip.className = 'emotions_tooltip';
+
+              // Format user info
+              const userInfo = item.users.map(user => {
+                  const date = formatDate(user.time);
+                  return `${user.mri.replace("8:","")} ${date}`;
+              }).join('<br>');
+
+              tooltip.innerHTML = userInfo;
+              div.appendChild(tooltip);
+              emotions_block.appendChild(div);
+            }
+          });
+          
+          e = doc.body.innerHTML;
+        } catch(err) {}
         
         // show pictureupdate
         try {
@@ -1135,7 +1286,7 @@
             
             if (match) {
               const date = new Date(parseInt(match[1], 10) * 1000);
-              const formattedDate = date.toLocaleString("en-GB", { hour12: true });
+              const formattedDate = formatDate(date);
               var icon = '<span class="redirect_icon">↩</span>';
               if (isForwardedtrue) {
                 return '<a class>' + icon + '<span class="author">(Forwarded)' + content.replace(match[0], '') + '</span><span class="timestamp">' + formattedDate + '</span></a><br>';
@@ -1331,7 +1482,7 @@
                 n = e.conversations.filter(function(e) {
                   return e.id && "ALL" !== e.id && !/@cast\.skype$/.test(e.id) && e.MessageList && e.MessageList.length;
                 });
-              a("hdr-user", p(e.userId)), a("hdr-exported", t.toLocaleString("en-GB", { hour12: true })), a("hdr-stats", n.length + " conversations"), function(e) {
+              a("hdr-user", p(e.userId)), a("hdr-exported", formatDate(t)), a("hdr-stats", n.length + " conversations"), function(e) {
                 for (var t = document.getElementById("conversations"), n = 0; n < e.length; n++) {
                   var a = document.createElement("li");
                   a.className = "conversations";
@@ -1352,7 +1503,7 @@
                   var i = e[n].properties && e[n].properties.lastimreceivedtime ? e[n].properties.lastimreceivedtime : null;
                   if (i) {
                     var l = document.createElement("span");
-                    l.className = "timestamp-conv", l.textContent = "Last from: " + new Date(i).toLocaleString("en-GB", { hour12: true }), r.appendChild(l);
+                    l.className = "timestamp-conv", l.textContent = "Last from: " + formatDate(i), r.appendChild(l);
                   }
                   t.appendChild(a);
                 }
