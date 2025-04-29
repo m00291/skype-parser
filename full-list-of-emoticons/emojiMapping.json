@@ -12281,5 +12281,19 @@
       "(zzz)"
     ],
     "imageUrl": "https://raw.githubusercontent.com/m00291/skype-parser/main/full-list-of-emoticons/full-list-of-emoticons/7764557c678c195039c73a2a0210f19e7023a81a.gif"
+  },
+  "jekyllandhyde": {
+    "name": "jekyllandhyde",
+    "shortcuts": [
+      "(jekyllandhyde)"
+    ],
+    "imageUrl": "https://raw.githubusercontent.com/m00291/skype-parser/main/full-list-of-emoticons/full-list-of-emoticons/jekyllandhyde.gif"
+  },
+  "naturescall": {
+    "name": "naturescall",
+    "shortcuts": [
+      "(ek)"
+    ],
+    "imageUrl": "https://raw.githubusercontent.com/m00291/skype-parser/main/full-list-of-emoticons/full-list-of-emoticons/naturescall.gif"
   }
 }
