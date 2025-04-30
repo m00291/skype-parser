@@ -12295,5 +12295,12 @@
       "(ek)"
     ],
     "imageUrl": "https://raw.githubusercontent.com/m00291/skype-parser/main/full-list-of-emoticons/full-list-of-emoticons/naturescall.gif"
+  },
+  "manvrplayer": {
+    "name": "manvrplayer",
+    "shortcuts": [
+      "(manvrplayer)"
+    ],
+    "imageUrl": "https://raw.githubusercontent.com/m00291/skype-parser/main/full-list-of-emoticons/full-list-of-emoticons/manvrplayer.gif"
   }
 }
