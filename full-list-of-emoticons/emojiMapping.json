@@ -1478,7 +1478,8 @@
   "champagne_864": {
     "name": "champagne",
     "shortcuts": [
-      "(champagne)(sparkling)"
+      "(champagne)",
+      "(sparkling)"
     ],
     "imageUrl": "https://raw.githubusercontent.com/m00291/skype-parser/main/full-list-of-emoticons/full-list-of-emoticons/262ef68c1f29312c7780798b9d688557af83b335.gif"
   },
@@ -12302,5 +12303,19 @@
       "(manvrplayer)"
     ],
     "imageUrl": "https://raw.githubusercontent.com/m00291/skype-parser/main/full-list-of-emoticons/full-list-of-emoticons/manvrplayer.gif"
+  },
+  "fistbump": {
+    "name": "fistbump",
+    "shortcuts": [
+      "(fistbump)"
+    ],
+    "imageUrl": "https://raw.githubusercontent.com/m00291/skype-parser/main/full-list-of-emoticons/full-list-of-emoticons/fistbump.gif"
+  },
+  "student": {
+    "name": "student",
+    "shortcuts": [
+      "(student)"
+    ],
+    "imageUrl": "https://raw.githubusercontent.com/m00291/skype-parser/main/full-list-of-emoticons/full-list-of-emoticons/student.gif"
   }
 }
