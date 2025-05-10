@@ -7,8 +7,86 @@
     base-uri 'none';
     frame-ancestors: 'none';
     block-all-mixed-content">
+  
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 
   <style>
+    #loading-all-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background-color: rgba(0, 0, 0, 0.5);
+      z-index: 999;
+    }
+    #load-all-progress-container {
+      background-color: lightgray;
+      padding: 20px;
+      border-radius: 8px;
+      text-align: center;
+      max-width: 80%;
+    }
+    #load-all-progress-text {
+      margin: 0;
+    }
+    #progress-bar {
+      width: 100%;
+      background-color: #e0e0e0;
+      height: 20px;
+      border-radius: 10px;
+      overflow: hidden;
+      margin-top: 10px;
+    }
+    #progress-bar-fill {
+      width: 0%;
+      background-color: lightskyblue;
+      height: 100%;
+      transition: width 0.3s;
+    }
+    #load-all-container {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 7;
+    }
+    #load-all-button {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+      overflow: hidden;
+      padding: 10px 15px;
+      background-color: lightsteelblue;
+      color: darkslategray;
+      font-weight: bold;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+    #load-all-button::before {
+      content: '';
+      position: absolute;
+      left: -80%;
+      width: 200%;
+      height: 100%;
+      background: linear-gradient(135deg, #00000000, #ffffffa1, #00000000, #00000000, #00000000);
+      transition: all 1s ease;
+    }
+    #load-all-button:hover::before {
+      transform: translateX(200%);
+    }
+    a {
+      word-break: break-all;
+    }
+    bing-response {
+      display: block;
+      overflow: auto;
+    }
     .backform {
       height: 35px;
       width: 35px;
@@ -113,10 +191,9 @@
     div#selected-conversation-placeholder {
       display: block;
       width: 100%;
-      top: 120px;
+      top: 8rem;
       bottom: 0;
       position: absolute;
-      overflow: auto;
     }
     .object {
       width: 100%;
@@ -201,9 +278,9 @@
       list-style-type: none;
       padding-left: 1rem;
       padding-right: 1rem;
-      margin-top: 1rem;
-      margin-bottom: 2rem;
-      padding-bottom: 2rem;
+      margin-top: 0rem;
+      margin-bottom: 0rem;
+      margin-block-end: unset;
     }
     ul.conversations {
       position: absolute;
@@ -222,8 +299,6 @@
       background-color: #fff;
       width: fit-content;
       border-radius: 15px;
-      border-bottom-left-radius: 0px;
-      border-bottom-right-radius: 0px;
       padding: 0.5rem 1rem 1rem;
       margin-bottom: -1rem;
     }
@@ -234,12 +309,13 @@
       padding: 0.5rem 1rem;
     }
     .message-body {
-      word-break: break-all;
       background-color: #fff;
       border-radius: 15px;
       border-top-left-radius: 0px;
       padding: 0.5rem 1rem;
       max-width: 800px;
+      overflow-wrap: anywhere;
+      position: relative;
     }
     .urlpreviews {
       margin-top: 10px;
@@ -249,7 +325,6 @@
       border: 1px solid #e0e0e0;
       width: fit-content;
       max-width: 500px;
-      word-break: break-word;
       display: none;
     }
     .url-title {
@@ -272,10 +347,11 @@
       word-wrap: break-word;
       border-bottom-style: solid;
       border-bottom-width: thin;
-      border-bottom-color: #626f82;
+      border-bottom-color: darkgray;
+      cursor: pointer;
     }
     li.conversations-sel {
-      background-color: #c7edfc;
+      background-color: #c7edfc82;
       color: #0b0b10;
       padding-left: .25rem;
       padding-top: .5rem;
@@ -285,6 +361,12 @@
       border-bottom-style: solid;
       border-bottom-width: thin;
       border-bottom-color: #626f82;
+    }
+    li.conversations:hover {
+      background: white;
+    }
+    li.conversations-sel:hover {
+      background: #c7edfc;
     }
     .form {
       position: absolute;
@@ -327,7 +409,7 @@
       display: none;
     }
     pre {
-      display: inline;
+      white-space: pre-wrap;
     }
     ul.details {
       list-style-type: circle;
@@ -352,6 +434,7 @@
     .imgerr {
       max-width: 200px;
       max-height: 20px;
+      white-space: nowrap;
     }
     .divimgerr {
       display: flex;
@@ -417,11 +500,13 @@
       word-wrap: break-word;
     }
     .media-container {
-      width: 100%;
-      max-width: 800px;
+      max-width: 300px;
+      max-height: 300px;
     }
     .jsonimg {
-      max-width: 100%;
+      max-width: inherit;
+      max-height: inherit;
+      cursor: pointer;
     }
     .ext {
       color: #626f82;
@@ -432,6 +517,7 @@
       display: block;
       border: 2px solid #ddd;
       border-radius: 5px;
+      background-color: white;
       box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
     }
     .emoji {
@@ -439,13 +525,16 @@
       box-shadow: unset;
       display: inline;
       border-radius: 0;
+      width: 2rem;
+    }
+    .emojichat {
+      width: 4rem;
     }
     .emotions_marginbottom {
       margin-bottom: 2.5em;
     }
     .emotions_block {
       display: flex;
-      position: absolute;
     }
     .emotions_json {
       display: none;
@@ -457,10 +546,11 @@
       height: 40px;
       background-color: white;
       border-radius: 50%;
-      position: relative;
+      position: absolute;
       display: flex;
       justify-content: center;
       align-items: center;
+      white-space: nowrap;
     }
     .emotions_box .emoji {
       height: 80%;
@@ -471,7 +561,7 @@
       background-color: #333;
       color: #fff;
       text-align: left;
-      border-radius: 30px;
+      border-radius: 2em;
       font-size: small;
       padding: 0.5rem 1rem;
       position: absolute;
@@ -487,6 +577,58 @@
       visibility: visible;
       opacity: 1;
     }
+    .suggestedActions {
+      background-color: lightgray;
+      padding: 0.25em 0.5em;
+      margin-top: 0.5em;
+      border-radius: 0.5em;
+      width: fit-content;
+    }
+    .bing_box {
+      background-color: white;
+      padding: 0.5em;
+      border-radius: 0.5em;
+      margin: 0.25em;
+    }
+    .poll_box {
+      background-color: white;
+      padding: 0.5em;
+      border-radius: 0.5em;
+      margin: 0.25em;
+      display: flex;
+      position: relative;
+    }
+    .poll_tooltip {
+      visibility: hidden;
+      background-color: #333;
+      color: #fff;
+      text-align: left;
+      border-radius: 2em;
+      font-size: small;
+      padding: 0.5rem 1rem;
+      position: absolute;
+      z-index: 10;
+      bottom: 100%;
+      left: 100%;
+      transform: translate(0, 100%);
+      opacity: 0;
+      transition: opacity 0.2s;
+      white-space: nowrap;
+    }
+    .poll_box:hover .poll_tooltip {
+      visibility: visible;
+      opacity: 1;
+    }
+    .attribution_text {
+      margin-bottom: 0.5em;
+    }
+    .bing_ref {
+      background-color: lightgray;
+      margin-left: 1em;
+      border-left: 0.3em solid gray;
+      padding-left: 0.3em;
+      font-size: smaller;
+    }
     video {
       background: black;
     }
@@ -495,7 +637,6 @@
       padding: 10px;
       box-shadow: 2px 2px 10px 4px rgba(0, 0, 0, 0.1);
       width: fit-content;
-      word-break: break-all;
       border-radius: 10px;
       z-index: 2;
       position: relative;
@@ -529,39 +670,6 @@
     }
   </style>
   <style>
-    /* Loading spinner styles */
-    #message-loader {
-      text-align: center;
-      padding: 30px;
-      color: #626f82;
-    }
-    .spinner {
-      margin: 20px auto;
-      width: 70px;
-      text-align: center;
-    }
-    .spinner > div {
-      width: 18px;
-      height: 18px;
-      background-color: #0078ca;
-      border-radius: 100%;
-      display: inline-block;
-      animation: sk-bouncedelay 1.4s infinite ease-in-out both;
-    }
-    .spinner .bounce1 {
-      animation-delay: -0.32s;
-    }
-    .spinner .bounce2 {
-      animation-delay: -0.16s;
-    }
-    @keyframes sk-bouncedelay {
-      0%, 80%, 100% { 
-        transform: scale(0);
-      } 40% { 
-        transform: scale(1.0);
-      }
-    }
-    
     .video-thumbnail-container {
       position: relative;
       display: inline-block;
@@ -596,13 +704,12 @@
     }
     .video-thumbnail {
       cursor: pointer;
-      max-width: 450px;
       transition: 0.5s;
     }
     .video-thumbnail:hover {
       opacity: 70%;
     }
-    .modal {
+    #videoModal {
       display: flex;
       position: fixed;
       top: 0;
@@ -615,15 +722,48 @@
       z-index: 9;
       opacity: 0;
       visibility: hidden;
-      transition: opacity 0.5s ease, visibility 0.5s ease;
+      transition: opacity 0.2s ease, visibility 0.2s ease;
     }
-    .modal.show {
+    #videoModal.show {
       opacity: 1;
       visibility: visible;
     }
-    .modal video {
+    #videoModal video {
       max-width: 90%;
       max-height: 90%;
+    }
+    #imgModal {
+      display: flex;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.44);
+      justify-content: center;
+      align-items: center;
+      z-index: 9;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.2s ease, visibility 0.2s ease;
+    }
+    #imgModal.show {
+      opacity: 1;
+      visibility: visible;
+    }
+    #imgPlayer {
+      cursor: grab;
+      max-width: 90%;
+      max-height: 90%;
+      position: relative;
+      overflow: hidden;
+    }
+    #imgPlayer.dragging {
+      cursor: grabbing;
+    }
+    #messages {
+      height: 100%; /* Adjust as needed */
+      overflow: auto;
     }
   </style>
 </head>
@@ -661,11 +801,14 @@
   <div id="selected-conversation step-2" class="right">
     <h1 class="conversation step-2" id="selected-conversation-header"></h1>
     <div id="selected-conversation-placeholder" class="step-2">
-      <div class="modal" id="videoModal">
+      <div id="videoModal">
         <video id="videoPlayer" controls>
           <source src="" type="video/mp4">
           Your browser does not support the video tag.
         </video>
+      </div>
+      <div id="imgModal">
+        <img id="imgPlayer" src="" alt="">
       </div>
       <ul class="messages" id="messages"></ul>
     </div>
@@ -695,7 +838,7 @@
           </li>
           <li>
             <strong>(Optional) Media file path from the export: </strong><input type="text" id="filePath" placeholder="C:\path\media">
-            <div style="color: #555;">( eg: C:\Users\username\Desktop\username_export\media )</div>
+            <div style="color: #555;">( eg: C:\Users\user\Desktop\export\media )</div>
           </li>
           <li><strong>Click the&nbsp;</strong><input type="button" id="btnLoad" value="Load" class="btn primaryCta"></li>
         </ol>
@@ -740,56 +883,75 @@
           isLoading = false; // Reset loading flag on error
         });
     }
-    function replaceemoji(content) {
-      return content.replace(/<ss[^>]*>([^<]+)<\/ss>/g, (match, shortcut) => {
-        shortcut = shortcut.toLowerCase().trim(); // Normalize shortcut
-
-        // Find the corresponding emoji key
-        for (const key in emojiMapping) {
-          if (emojiMapping[key].shortcuts.includes(shortcut)) {
-            // Check if the image is cached
-            if (!emojiCache[key]) {
-              const img = document.createElement('img');
-              img.src = emojiMapping[key].imageUrl;
-              img.alt = shortcut;
-              img.title = shortcut;
-              img.className = 'emoji';
-              img.setAttribute('loading','lazy');
-
-              // Cache the image
-              emojiCache[key] = img; // Store in cache
-              //console.log(key + '⚠️Store in cache');
-            }
-            //console.log(key + '✅Used cache');
-            return emojiCache[key].outerHTML; // Use cached image HTML
+    function findEmoji(shortcutToTry) {
+      for (const key in emojiMapping) {
+        const emoji = emojiMapping[key];
+        if (emoji.shortcuts.includes(`(${shortcutToTry})`) || emoji.shortcuts.includes(shortcutToTry)) {
+          if (!emojiCache[key]) {
+            const img = document.createElement('img');
+            img.src = emoji.imageUrl;
+            img.alt = shortcutToTry;
+            img.title = shortcutToTry;
+            img.className = 'emoji';
+            img.setAttribute('loading', 'lazy');
+            emojiCache[key] = img;
           }
+          return emojiCache[key].cloneNode(); // Return a copy
         }
-        return match; // Return original if no mapping found
+      }
+      return null;
+    }
+    function normalizeShortcut(shortcut) {
+      const mapping = {
+        'clapskypesmilie': 'clap',
+        '2714_heavycheckmark': 'checkmark',
+        '1f624_facewithlookoftriumph': 'facewithsteamfromnose',
+      };
+
+      const normalized = shortcut.toLowerCase().trim();
+      return mapping[normalized] || normalized;
+    }
+    const EMOJI_REGEX = /<ss([^>]*)>([^<]*)<\/ss>/gi;
+    function replaceemoji(content) {
+      return content.replace(EMOJI_REGEX, (match, attrs, inner) => {
+        // Try to extract the type attribute from the attributes string
+        const typeMatch = attrs.match(/type=["']?([^"'\s>]+)["']?/i);
+        const type = typeMatch ? typeMatch[1].toLowerCase().trim() : null;
+
+        // Normalize inner content
+        const shortcut = normalizeShortcut(inner);
+
+        let result = null;
+
+        // 1. Try using inner content first
+        if (shortcut) {
+          result = findEmoji(shortcut);
+        }
+
+        // 2. If not found, try fallback transformation on shortcut
+        if (!result && shortcut) {
+          //console.log(shortcut);
+          const transformedShortcut = '(' + shortcut.replace(/^.*?_/, '').replace(/:[^:]*$/, '').replace(/[()]/g, '') + ')';
+          //console.log(transformedShortcut);
+          result = findEmoji(transformedShortcut);
+        }
+
+        // 3. Still not found? Try using the type attribute
+        if (!result && type) {
+          //console.log(type);
+          result = findEmoji(type);
+        }
+
+        // 4. Return emoji HTML if found, or fallback
+        if (result) {
+          return result.outerHTML;
+        } else {
+          return '[emoji]' + match; // fallback to original tag
+        }
       });
     }
-    function getEmojiImgByShortcut(shortcut) {
-      shortcut = shortcut.toLowerCase().trim();
-      shortcut = shortcut === 'clapskypesmilie' ? 'clap' : shortcut;
-      shortcut = shortcut === '2714_heavycheckmark' ? 'checkmark' : shortcut;
-
-      function findEmoji(shortcutToTry) {
-        for (const key in emojiMapping) {
-          const emoji = emojiMapping[key];
-          if (emoji.shortcuts.includes(`(${shortcutToTry})`) || emoji.shortcuts.includes(shortcutToTry)) {
-            if (!emojiCache[key]) {
-              const img = document.createElement('img');
-              img.src = emoji.imageUrl;
-              img.alt = shortcutToTry;
-              img.title = shortcutToTry;
-              img.className = 'emoji';
-              img.setAttribute('loading', 'lazy');
-              emojiCache[key] = img;
-            }
-            return emojiCache[key].cloneNode(); // Return a copy
-          }
-        }
-        return null;
-      }
+    function getemotionImgByShortcut(shortcut) {
+      shortcut = normalizeShortcut(shortcut)
 
       // First attempt
       let result = findEmoji(shortcut);
@@ -800,26 +962,87 @@
         result = findEmoji(transformedShortcut);
       }
 
-      // If still not found, try 'skype'
       if (!result) {
-        result = findEmoji('skype');
+        return null;
       }
 
       return result;
     }
     
-    document.getElementById('videoModal').addEventListener('click', (event) => {
-      if (event.target === document.getElementById('videoModal')) {
-        const videoPlayer = document.getElementById('videoPlayer');
+    let scale = 1;
+    let isDragging = false;
+    let position = { x: 0, y: 0 };
+    let start = { x: 0, y: 0 };
+    let imageStart = { x: 0, y: 0 };
+    function updateTransform() {
+      imgPlayer.style.transform = `translate(${position.x}px, ${position.y}px) scale(${scale})`;
+    }
+    const imgModal = document.getElementById('imgModal');
+    const imgPlayer = document.getElementById('imgPlayer');
+    function showimgModal() {
+      if (imgModal.classList.contains('show')) {
+        imgModal.classList.remove('show');
+      } else {
+        imgModal.classList.add('show');
+        scale = 1;
+        position = { x: 0, y: 0 };
+        start = { x: 0, y: 0 };
+        imageStart = { x: 0, y: 0 };
+        imgPlayer.style.transform = `scale(${scale})`;
+      }
+    }
+    imgPlayer.addEventListener('mousedown', (e) => {
+      isDragging = true;
+      imgPlayer.classList.add('dragging');
+      start.x = e.clientX;
+      start.y = e.clientY;
+      imageStart.x = position.x;
+      imageStart.y = position.y;
+    });
+    document.addEventListener('mousemove', (e) => {
+      if (!isDragging) return;
+      const dx = e.clientX - start.x;
+      const dy = e.clientY - start.y;
+      position.x = imageStart.x + dx;
+      position.y = imageStart.y + dy;
+      updateTransform();
+    });
+    document.addEventListener('mouseup', () => {
+      isDragging = false;
+      imgPlayer.classList.remove('dragging');
+    });
+    imgPlayer.ondragstart = () => false;
+    imgModal.addEventListener('click', (event) => {
+      if (event.target === imgModal) {
+        showimgModal();
+      }
+    });
+    imgModal.addEventListener('wheel', function(e) {
+      e.preventDefault();
+
+      if (Math.sign(e.deltaY) < 0) {
+        scale += 0.1;
+      } else {
+        scale -= 0.1;
+      }
+      scale = Math.min(Math.max(0.1, scale), 5);
+      updateTransform();
+    });
+    function showimg(imgElement) {
+      imgPlayer.src = imgElement.src;
+      imgPlayer.title = imgElement.src;
+      showimgModal();
+    }
+    
+    const videoModal = document.getElementById('videoModal');
+    const videoPlayer = document.getElementById('videoPlayer');
+    videoModal.addEventListener('click', (event) => {
+      if (event.target === videoModal) {
         videoModal.classList.toggle('show');
         videoPlayer.pause();
       }
     });
-    
     function playvideo(imgElement) {
-      const videoModal = document.getElementById('videoModal');
-      const videoPlayer = document.getElementById('videoPlayer');
-      
       var videosrc = imgElement.src;
       videoPlayer.src = videosrc.substring(0 , videosrc.length - 14) + '1.mp4';
       videoModal.classList.toggle('show');
@@ -849,11 +1072,11 @@
         
         try {
           var ext = extele.getElementsByClassName("ext")[0];
-          if (ext.innerHTML == '(mp4)') {
-            ext.innerHTML = '(unknown)';
+          if (ext.textContent == '(mp4)') {
+            ext.textContent = '(unknown)';
             imgElement.setAttribute('onclick','');
           }
-          ext.innerHTML += '(error 404)';
+          ext.textContent += '(error 404)';
         } catch(err) {}
       }
     }
@@ -878,7 +1101,7 @@
             };
             
             try {
-              extele.getElementsByClassName("ext")[0].innerHTML = '(' + ex + ')';
+              extele.getElementsByClassName("ext")[0].textContent = '(' + ex + ')';
             } catch (err) {}
           }, 100); // 0.1 seconds before retry
         } else {
@@ -895,7 +1118,7 @@
         
         parentele.classList.add('video-thumbnail-container');
         try {
-          extele.getElementsByClassName("ext")[0].innerHTML = '(mp4)';
+          extele.getElementsByClassName("ext")[0].textContent = '(mp4)';
         } catch (err) {}
         imgElement.setAttribute('onclick','playvideo(this)');
         retryLoadImage(imgElement, imageUrl + ".2.jpeg", maxRetries, e);
@@ -915,6 +1138,7 @@
         const img = new Image();
         img.src = long_e + '.1.jpeg';
         img.className = "jsonimg";
+        img.setAttribute('onclick','showimg(this)');
         img.setAttribute('onerror', `retryLoadMedia(this, '${long_e.replace(/\\/g, '\\\\')}', ${maxRetries}, '${e}')`);
         img.setAttribute('onload', 'this.title = this.src');
         //img.setAttribute('loading','lazy');
@@ -926,7 +1150,7 @@
         
         return m.outerHTML + span.outerHTML;
       }
-      return '[Media file path: ' + e + ']';
+      return '<span style="font-family: serif, none;">[Media file: ' + e + ']<br><span style="font-size:small;">(provide file path to show image)</span></span>';
     }
 
     function formatDate(timestamp) {
@@ -943,22 +1167,6 @@
 
       return `${day}/${month}/${year} ${hours}:${minutes}:${seconds} ${ampm}`;
     }
-
-    // Function to create and show a loading spinner
-    function showLoading(container) {
-      const loader = document.createElement('div');
-      loader.id = 'message-loader';
-      loader.innerHTML = `
-        <div class="spinner">
-          <div class="bounce1"></div>
-          <div class="bounce2"></div>
-          <div class="bounce3"></div>
-        </div>
-        <p>Loading messages...</p>
-      `;
-      container.innerHTML = '';
-      container.appendChild(loader);
-    }
     
     !function() {
       "use strict";
@@ -967,11 +1175,16 @@
       }
       function m(e) {
         e.preventDefault();
+        var con = e.target.parentNode;
+        var r = con.parentNode.getElementsByTagName("li");
+        for (var o = 0; o < r.length; o++) {
+          r[o].classList.remove("conversations-sel");
+        }
+        con.classList.add("conversations-sel");
+
         var t = parseInt(e.target.getAttribute("data-conv"), 10);
+        var display_total = parseInt((e.target.nextElementSibling.getElementsByClassName("messageCount")[0].textContent).match(/\d+/)[0], 10);
         var n = document.getElementById("messages");
-        
-        // Show loading animation
-        showLoading(n);
         
         document.getElementById("selected-conversation-header").textContent = c(window.Skype.conversations[t]);
         
@@ -979,121 +1192,342 @@
         var a = window.Skype.conversations[t] && window.Skype.conversations[t].MessageList 
               ? window.Skype.conversations[t].MessageList 
               : [];
+
+        // Clear existing messages
+        n.innerHTML = '';
         
-        // Use setTimeout to defer execution and prevent UI freezing
-        setTimeout(() => {
-          // Process messages in chunks to prevent UI freezing
-          const chunkSize = 500; // Process 500 messages at a time
-          const totalMessages = a.length;
-          let processedCount = 0;
-          
-          // Create a document fragment to improve rendering performance
-          const fragment = document.createDocumentFragment();
-          
-          function processChunk() {
-            const start = processedCount;
-            const end = Math.min(processedCount + chunkSize, totalMessages);
+        // Initialize variables for lazy loading
+        const messagesPerPage = 50;
+        let currentPage = 0;
+        let isLoading = false;
+        let loadingAll = false;
+        let progressUpdateActive = false;
+  
+        // reset load all button
+        if (document.getElementById('load-all-container')) {
+          try {
+            document.getElementById('load-all-container').parentNode.removeChild(document.getElementById('load-all-container'));
+          } catch (e) {
+            console.error("Error removing load-all-container:", e);
+          }
+        }
+  
+        // Create a loading indicator that will appear at the bottom
+        const loadingIndicator = document.createElement('div');
+        loadingIndicator.id = 'lazy-loading-indicator';
+        loadingIndicator.innerHTML = '<h2>Loading ...</h2>';
+        loadingIndicator.style.display = 'none';
+        loadingIndicator.style.padding = '100px';
+        loadingIndicator.style.textAlign = 'center';
+        n.appendChild(loadingIndicator);
+
+        // Create "Load All Messages" overlay button
+        const loadAllButtonContainer = document.createElement('div');
+        loadAllButtonContainer.id = 'load-all-container';
+        
+        const loadAllButton = document.createElement('button');
+        loadAllButton.id = 'load-all-button';
+        loadAllButton.textContent = 'Load All Messages';
+        
+        loadAllButton.addEventListener('click', loadallmessages);
+        
+        loadAllButtonContainer.appendChild(loadAllButton);
+        document.body.appendChild(loadAllButtonContainer);
+
+        function renderMessage(message) {
+          if (("" !== message.content) && !(message.properties && "isserversidegenerated" in message.properties)) {
+            var r = document.createElement("li");
+            r.className = "message";
+            r.setAttribute("id", message.id);
+            var o = document.createElement("div");
+            o.className = "message-author";
+            r.appendChild(o);
+            var i = document.createElement("span");
+            i.className = "author";
+            i.textContent = p(message.displayName !== null ? message.displayName : message.from);
+            o.appendChild(i);
+            var l = document.createElement("span");
+            l.className = "timestamp";
+            l.textContent = formatDate(message.originalarrivaltime);
+            o.appendChild(l);
+            if (message.properties && "edittime" in message.properties) {
+              var et = document.createElement("span");
+              et.className = "timestamp";
+              const date = new Date(parseInt(message.properties.edittime));
+              et.textContent = '(' + formatDate(date) + ' edited)';
+              o.appendChild(et);
+            }
+            var d = document.createElement("div");
+            d.className = "message-body";
             
-            for (let s = start; s < end; s++) {
-              if (("" !== a[s].content) && !(a[s].properties && "isserversidegenerated" in a[s].properties)) {
-                var r = document.createElement("li");
-                r.className = "message";
-                r.setAttribute("id", a[s].id);
-                var o = document.createElement("div");
-                o.className = "message-author";
-                r.appendChild(o);
-                var i = document.createElement("span");
-                i.className = "author";
-                i.textContent = p(a[s].displayName !== null ? a[s].displayName : a[s].from);
-                o.appendChild(i);
-                var l = document.createElement("span");
-                l.className = "timestamp";
-                l.textContent = formatDate(a[s].originalarrivaltime);
-                o.appendChild(l);
-                if (a[s].properties && "edittime" in a[s].properties) {
-                  var et = document.createElement("span");
-                  et.className = "timestamp";
-                  const date = new Date(parseInt(a[s].properties.edittime));
-                  et.textContent = '(' + formatDate(date) + ' edited)';
-                  o.appendChild(et);
-                }
-                var d = document.createElement("div");
-                d.className = "message-body";
-                
-                var urlpreviews_s = '';
-                if (a[s].properties && "urlpreviews" in a[s].properties) {
-                  urlpreviews_s = '<div class="urlpreviews">' + a[s].properties.urlpreviews + '</div>';
-                }
-                
-                var emotions_s = '';
-                if (a[s].properties && "emotions" in a[s].properties) {
-                  emotions_s = '<div class="emotions_block"></div><div class="emotions_json">' + JSON.stringify(a[s].properties.emotions) + '</div>';
-                  d.className = "message-body";
-                  d.classList.add("emotions_marginbottom");
-                }
-                
-                var isForwarded_s = '';
-                if (a[s].properties && "forwardMetadata" in a[s].properties) {
-                  isForwarded_s = "isForwarded:true";
-                }
-                
-                var Media_GenericFile_s = '';
-                if (a[s].messagetype === "RichText/Media_GenericFile") {
-                  Media_GenericFile_s = "<div class='attachment_container'></div>";
-                }
-                
-                if (a[s].messagetype === "RichText/Media_Album") {
-                  continue;
-                }
-                
-                d.innerHTML = a[s].amsreferences == null || a[s].messagetype === "RichText/Media_GenericFile"
-                            ? u(isForwarded_s + Media_GenericFile_s + a[s].content + urlpreviews_s + emotions_s)
-                            : media(a[s].amsreferences);
-                r.appendChild(d);
-                fragment.appendChild(r);
-              } else if ("" === a[s].content && a[s].properties && "deletetime" in a[s].properties) {
-                var r = document.createElement("li");
-                r.className = "message";
-                r.setAttribute("id", a[s].id);
-                var o = document.createElement("div");
-                o.className = "message-deleted";
-                r.appendChild(o);
-                var i = document.createElement("span");
-                i.className = "author";
-                i.textContent = p(a[s].displayName !== null ? a[s].displayName : a[s].from);
-                o.appendChild(i);
-                var l = document.createElement("span");
-                l.className = "timestamp";
-                l.textContent = formatDate(parseFloat(a[s].properties.deletetime)) +" [deleted]";
-                o.appendChild(l);
-                fragment.appendChild(r);
-              }
+            var urlpreviews_s = '';
+            if (message.properties && "urlpreviews" in message.properties) {
+              urlpreviews_s = '<div class="urlpreviews">' + message.properties.urlpreviews + '</div>';
             }
             
-            processedCount = end;
-            
-            // Update progress indicator
-            const progressElement = document.getElementById('message-loader');
-            if (progressElement) {
-              progressElement.querySelector('p').textContent = `Loading messages... ${processedCount} / ${totalMessages} (${Math.round((processedCount / totalMessages) * 100)}%)`;
+            var suggestedActions_s = '';
+            if (message.properties && "suggestedActions" in message.properties) {
+              suggestedActions_s = '<div class="suggestedActions">' + JSON.stringify(message.properties.suggestedActions.actions) + '</div>';
             }
             
-            // If there are more messages to process, schedule the next chunk
-            if (processedCount < totalMessages) {
-              setTimeout(processChunk, 0);
+            var emotions_s = '';
+            if (message.messagetype !== "Poll" && message.properties && "emotions" in message.properties) {
+              emotions_s = '<div class="emotions_block"></div><div class="emotions_json">' + JSON.stringify(message.properties.emotions) + '</div>';
+              d.classList.add("emotions_marginbottom");
+            }
+            
+            var poll_emotions_s = '';
+            if (message.messagetype === "Poll" && message.properties && "emotions" in message.properties) {
+              poll_emotions_s = '<div class="poll_emotions_block"></div><div class="emotions_json">' + JSON.stringify(message.properties.emotions) + '</div>';
+            }
+            
+            var isForwarded_s = '';
+            if (message.properties && "forwardMetadata" in message.properties) {
+              isForwarded_s = "isForwarded:true";
+            }
+            
+            var Media_GenericFile_s = '';
+            if (message.messagetype === "RichText/Media_GenericFile") {
+              Media_GenericFile_s = "<div class='attachment_container'></div>";
+            }
+            
+            if (message.messagetype === "RichText/Media_Album") {
+              return null;
+            }
+            
+            if (message.messagetype === "PopCard") {
+              return null;
+            }
+            
+            if (message.content.includes('<bing-response') && !message.properties) {
+              return null;
+            }
+
+            let content = '';
+            content = message.displayName === "Bing" || message.displayName === "Copilot"
+                    ? message.content
+                    : message.content.replace(/\$/g, '\\$');
+            
+            d.innerHTML = message.amsreferences == null || message.messagetype === "RichText/Media_GenericFile"
+                        ? u(isForwarded_s + Media_GenericFile_s + content + urlpreviews_s + suggestedActions_s + emotions_s + poll_emotions_s)
+                        : media(message.amsreferences) + u(emotions_s);
+            r.appendChild(d);
+            
+            return r;
+          } else if ("" === message.content && message.properties && "deletetime" in message.properties) {
+            var r = document.createElement("li");
+            r.className = "message";
+            r.setAttribute("id", message.id);
+            var o = document.createElement("div");
+            o.className = "message-deleted";
+            r.appendChild(o);
+            var i = document.createElement("span");
+            i.className = "author";
+            i.textContent = p(message.displayName !== null ? message.displayName : message.from);
+            o.appendChild(i);
+            var l = document.createElement("span");
+            l.className = "timestamp";
+            if (message.messagetype === "Poll") {
+              l.textContent = formatDate(parseFloat(message.properties.deletetime)) +" created Poll.";
             } else {
-              // All chunks processed, render to DOM
-              n.innerHTML = '';
-              n.appendChild(fragment);
-              
-              // Scroll to top when finished
-              document.getElementById("selected-conversation-placeholder").scrollTop = 0;
+              l.textContent = formatDate(parseFloat(message.properties.deletetime)) +" [deleted]";
             }
+            o.appendChild(l);
+            
+            return r;
+          }
+        }
+
+        // Function to load and render a page of messages
+        function loadMessages() {
+          if (isLoading || (!loadingAll && currentPage * messagesPerPage >= a.length)) {
+            return;
           }
           
-          // Start processing the first chunk
-          processChunk();
-        }, 50);
+          isLoading = true;
+          loadingIndicator.style.display = 'block';
+          
+          const startIndex = currentPage * messagesPerPage;
+          const endIndex = loadingAll ? a.length : Math.min(startIndex + messagesPerPage, a.length);
+          const fragment = document.createDocumentFragment();
+          
+          setTimeout(() => {
+            try {
+              // Determine how many messages to process in this batch
+              const batchEndIndex = loadingAll ? Math.min(startIndex + messagesPerPage, endIndex) : endIndex;
+              
+              for (let i = startIndex; i < batchEndIndex; i++) {
+                if (i < a.length) {
+                  const messageElement = renderMessage(a[i]);
+                  if (messageElement) {
+                    fragment.appendChild(messageElement);
+                  }
+                }
+              }
+              
+              // Insert the new messages before the loading indicator
+              n.insertBefore(fragment, loadingIndicator);
+              
+              currentPage++;
+              
+              // Update progress if we're loading all messages
+              if (loadingAll && progressUpdateActive) {
+                //updateLoadAllProgress(Math.min(currentPage * messagesPerPage, a.length), a.length); // some messages are not processed
+                updateLoadAllProgress(Math.min(Math.ceil(currentPage * messagesPerPage / a.length * display_total), display_total), display_total);
+              }
+              
+              // If we're loading all messages and haven't finished yet, schedule the next batch
+              if (loadingAll && batchEndIndex < endIndex) {
+                isLoading = false;
+                loadMessages(); // Continue loading next batch
+              } else {
+                isLoading = false;
+                
+                // Hide loading indicator and load all button if we've loaded all messages
+                if (currentPage * messagesPerPage >= a.length) {
+                  loadingIndicator.style.display = 'none';
+                  loadAllButtonContainer.style.display = 'none';
+                  
+                  // Stop progress updates
+                  progressUpdateActive = false;
+                  
+                  // Remove overlay if it exists
+                  const overlay = document.getElementById('loading-all-overlay');
+                  if (overlay && overlay.parentNode) {
+                    setTimeout(() => {
+                      try {
+                        overlay.parentNode.removeChild(overlay);
+                      } catch (e) {
+                        // Overlay might already be removed
+                      }
+                    }, 1000);
+                  }
+                }
+                
+                // Process math equations if MathJax is available
+                if (window.MathJax && MathJax.typesetPromise) {
+                  MathJax.typesetPromise([n]);
+                }
+              }
+            } catch (error) {
+              console.error('Error loading messages:', error);
+              isLoading = false;
+              loadingIndicator.innerHTML = '<p>Error loading messages. <a href="#" onclick="retryLoading(); return false;">Retry</a></p>';
+            }
+          }, 50);
+        }
+        
+        // Function to load all messages
+        function loadallmessages() {
+          if (isLoading) return;
+          
+          loadingAll = true;
+          loadAllButton.disabled = true;
+          
+          // Remove any existing overlay
+          const existingOverlay = document.getElementById('loading-all-overlay');
+          if (existingOverlay) {
+            existingOverlay.parentNode.removeChild(existingOverlay);
+          }
+          
+          // Create overlay to show progress
+          const overlay = document.createElement('div');
+          overlay.id = 'loading-all-overlay';
+          
+          const progressContainer = document.createElement('div');
+          progressContainer.id = 'load-all-progress-container';
+          
+          const progressText = document.createElement('h3');
+          progressText.id = 'load-all-progress-text';
+          progressText.textContent = 'Loading all messages...';
+          
+          const progressBar = document.createElement('div');
+          progressBar.id = 'progress-bar';
+          
+          const progressBarFill = document.createElement('div');
+          progressBarFill.id = 'progress-bar-fill';
+          
+          progressBar.appendChild(progressBarFill);
+          progressContainer.appendChild(progressText);
+          progressContainer.appendChild(progressBar);
+          overlay.appendChild(progressContainer);
+          document.body.appendChild(overlay);
+          
+          // Start progress updates
+          progressUpdateActive = true;
+          
+          // Start loading all messages
+          loadMessages();
+        }
+        
+        // Update progress function
+        function updateLoadAllProgress(loaded, total) {
+          if (!progressUpdateActive) return;
+          
+          const percent = Math.round((loaded / total) * 100);
+          const progressBarFill = document.getElementById('progress-bar-fill');
+          const progressText = document.getElementById('load-all-progress-text');
+          
+          if (progressBarFill) {
+            progressBarFill.style.width = percent + '%';
+          }
+          
+          if (progressText) {
+            progressText.textContent = `Loading all messages: ${loaded}/${total} (${percent}%)`;
+          }
+          
+          if (loaded >= total) {
+            progressUpdateActive = false;
+            
+            setTimeout(() => {
+              const overlay = document.getElementById('loading-all-overlay');
+              if (overlay && overlay.parentNode) {
+                try {
+                  overlay.parentNode.removeChild(overlay);
+                } catch (e) {
+                  console.error("Error removing overlay after completion:", e);
+                }
+              }
+            }, 1000);
+          }
+        }
+        
+        // Retry function in case of loading error
+        window.retryLoading = function() {
+          loadingIndicator.innerHTML = '<p>Loading more messages...</p>';
+          loadMessages();
+        };
+        
+        // Intersection Observer to detect when user scrolls near the bottom
+        const observer = new IntersectionObserver((entries) => {
+          if (entries[0].isIntersecting && !isLoading && !loadingAll) {
+            loadMessages();
+          }
+        }, { 
+          root: document.getElementById("selected-conversation-placeholder"),
+          rootMargin: "200px",
+          threshold: 0.1
+        });
+        
+        // Observe the loading indicator
+        observer.observe(loadingIndicator);
+        
+        // Load the first page immediately
+        loadMessages();
+        
+        // Add scroll event listener as fallback for browsers that don't support IntersectionObserver
+        const scrollContainer = document.getElementById("selected-conversation-placeholder");
+        if (!window.IntersectionObserver) {
+          scrollContainer.addEventListener('scroll', () => {
+            const scrollPosition = scrollContainer.scrollTop + scrollContainer.clientHeight;
+            const scrollHeight = scrollContainer.scrollHeight;
+            
+            // Load more when user scrolls to 80% of the current height
+            if (scrollPosition > scrollHeight * 0.8 && !isLoading && !loadingAll) {
+              loadMessages();
+            }
+          });
+        }
       }
       function a(e, t) {
         document.getElementById(e).textContent = t;
@@ -1112,27 +1546,36 @@
         
         const isForwardedtrue = e.match(/isForwarded:true/);
         
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(e, 'text/html');
-        
         loadEmojiMapping(emojiMapping => {
           e = replaceemoji(e);
         });
         
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(e, 'text/html');
+        
+        // large emoji chat
+        try {
+          const emoji_chat = doc.getElementsByClassName("emoji");
+          if (emoji_chat.length == 1 && doc.body.innerHTML === emoji_chat[0].outerHTML) {
+            emoji_chat[0].classList.add("emojichat");
+          }
+          e = doc.body.innerHTML;
+        } catch(err) {}
+        
         // show emotions
         try {
           const emotions_block = doc.getElementsByClassName("emotions_block")[0];
-          const emotions_json = JSON.parse(doc.getElementsByClassName("emotions_json")[0].innerHTML);
+          const emotions_json = JSON.parse(doc.getElementsByClassName("emotions_json")[0].textContent);
           
           emotions_json.forEach(item => {
             if (item.key !== 'reactionsConsumptionHorizon') {
               const div = document.createElement('div');
               div.className = 'emotions_box';
 
-              const emojiImg = getEmojiImgByShortcut(item.key);
+              const emotionsImg = getemotionImgByShortcut(item.key);
 
-              if (emojiImg) {
-                div.appendChild(emojiImg);
+              if (emotionsImg) {
+                div.appendChild(emotionsImg);
               } else {
                 div.textContent = '[emotions]' + item.key;
               }
@@ -1156,6 +1599,109 @@
           e = doc.body.innerHTML;
         } catch(err) {}
         
+        // poll
+        try {
+          const URIObjectnode = doc.getElementsByTagName("uriobject")[0];
+          const URIObjecttype = URIObjectnode.getAttribute("type");
+          const poll_json = JSON.parse(doc.getElementsByClassName("emotions_json")[0].textContent);
+
+          if (URIObjecttype === 'Poll') {
+            var poll_block = document.createElement('div');
+            poll_block.className = 'suggestedActions';
+            poll_block.textContent = URIObjectnode.innerText;
+
+            const polloptions = URIObjectnode.getAttribute("optionsEncoded").split('|');
+            polloptions.forEach(opt => {
+              const div = document.createElement('div');
+              div.className = 'poll_box';
+              div.textContent = opt;
+
+              for (var i in poll_json) {
+                if (poll_json[i].key.includes(opt)) {
+                  // Tooltip
+                  const tooltip = document.createElement('div');
+                  tooltip.className = 'poll_tooltip';
+
+                  // Format user info
+                  const userInfo = poll_json[i].users.map(user => {
+                      const date = formatDate(user.time);
+                      return `${user.mri.replace("8:","")} ${date}`;
+                  }).join('<br>');
+
+                  tooltip.innerHTML = userInfo;
+                  div.appendChild(tooltip);
+                }
+              }
+
+              poll_block.appendChild(div);
+            });
+
+            var pollsvg =
+            `<svg width="28" height="28" viewBox="0 0 28 28">
+              <path d=" M 14 14 L 22 14 A 8 8 0 1 1 14 6 Z" fill="white" stroke="black" stroke-width="1" />
+              <g transform="translate(3, -3)">
+                <path d="M 14 14 L 14 6 A 8 8 0 0 1 22 14 Z" fill="white" stroke="black" stroke-width="1" />
+              </g>
+            </svg>`;
+
+            URIObjectnode.outerHTML = poll_block.outerHTML + pollsvg + 'Poll';
+
+            e = doc.body.innerHTML;
+          }
+
+        } catch (err) {}
+        
+        // show bing actions
+        try {
+          const bing_block = doc.getElementsByClassName("suggestedActions")[0];
+          const bing_json = JSON.parse(bing_block.textContent);
+          bing_block.textContent = 'Suggested Actions:';
+          
+          bing_json.forEach(item => {
+            const div = document.createElement('div');
+            div.className = 'bing_box';
+            div.textContent = item.title;
+
+            bing_block.appendChild(div);
+          });
+          
+          e = doc.body.innerHTML;
+        } catch(err) {}
+        
+        // show bing-response
+        try {
+          const bing = doc.getElementsByTagName("bing-response")[0];
+          const bing_group = Array.from(bing.getElementsByTagName("attributions-group"));
+          
+          bing_group.forEach(group => {
+            var att_group = Array.from(group.getElementsByTagName("attribution"));
+
+            att_group.forEach(att => {
+              var title = att.getAttribute("title");
+              var src = att.getAttribute("href");
+              
+              att.remove();
+
+              var span = document.createElement("span");
+              span.className = 'bing_ref';
+              span.textContent = title;
+
+              if (src) {
+                var a = document.createElement("a");
+                a.href = src;
+                a.textContent = src;
+                span.append(' (');
+                span.append(a);
+                span.append(')');
+              }
+
+              group.append(span);
+            });
+          });
+          
+          e = doc.body.innerHTML;
+        } catch (err) {}
+
         // show pictureupdate
         try {
           const pictureupdate = doc.getElementsByTagName("pictureupdate")[0];
@@ -1199,7 +1745,7 @@
           
           if (filename.length > 0) {
             var div = document.createElement('div');
-            div.innerHTML = 'File: ' + filename;
+            div.textContent = 'File: ' + filename;
             
             attachment_container.appendChild(div);
             
@@ -1208,7 +1754,7 @@
               const megabytes = (bytes / (1024 * 1024)).toFixed(2);
               
               var size = document.createElement('div');
-              size.innerHTML = 'Size: ' + megabytes + 'MB';
+              size.textContent = 'Size: ' + megabytes + 'MB';
               attachment_container.appendChild(size);
             }
             
@@ -1220,15 +1766,15 @@
         // show url preview
         try {
           const preview = doc.getElementsByClassName("urlpreviews")[0];
-          const previewjson = preview.innerHTML;
+          const previewjson = preview.textContent;
           
           if ("title" in JSON.parse(previewjson)[0].value) {
             preview.style.display = 'block';
-            preview.innerHTML = '';
+            preview.textContent = '';
             
             var ti = document.createElement('div');
             ti.className = 'url-title';
-            ti.innerHTML = JSON.parse(previewjson)[0].value.title;
+            ti.textContent = JSON.parse(previewjson)[0].value.title;
             
             preview.append(ti);
           }
@@ -1236,7 +1782,7 @@
           if ("description" in JSON.parse(previewjson)[0].value) {
             var des = document.createElement('div');
             des.className = 'url-description';
-            des.innerHTML = JSON.parse(previewjson)[0].value.description;
+            des.textContent = JSON.parse(previewjson)[0].value.description;
             
             preview.append(des);
           }
@@ -1244,12 +1790,25 @@
           e = doc.body.innerHTML;
         } catch(err) {}
         
+        // remove botssettings
+        try {
+          const botssettingsnode = doc.getElementsByTagName("botssettings")[0];
+          botssettingsnode.remove();
+
+          e = doc.body.innerHTML;
+        } catch(err) {}
+        
+        // At
+        try {
+          e = e.replace(/<at [^>]*>(.*?)<\/at>/g, (_, name) => `<b>@${name}</b>`);
+        } catch(err) {}
+
         // sticker cannot be loaded
         try {
           const URIObjectnode = doc.getElementsByTagName("URIObject")[0];
           const URIObjecturi = URIObjectnode.getAttribute("uri");
           
-          if ((URIObjectnode.innerHTML.includes("已傳送貼圖給您")) || (URIObjectnode.innerHTML.includes("A sticker was sent"))) {
+          if ((URIObjectnode.textContent.includes("已傳送貼圖給您")) || (URIObjectnode.textContent.includes("A sticker was sent"))) {
 
             var img = document.createElement("img");
             img.className = "imgerr";
@@ -1258,15 +1817,13 @@
             
             var m = document.createElement("span");
             m.className = 'ext';
-            m.innerHTML = '(sticker)';
-            var s = document.createElement("span");
-            m.innerHTML += '(error 404)';
+            m.textContent = '(sticker)';
+            m.textContent += '(error 404)';
             
             var d = document.createElement("div");
             d.className = "divimgerr";
             d.appendChild(img);
             d.appendChild(m);
-            d.appendChild(s);
             
             e = d.outerHTML;
           }
@@ -1299,6 +1856,12 @@
           },
           eventtime: function(content) {
             return " ";
+          },
+          detailedtargetinfo: function(content) {
+            return "";
+          },
+          rosterversion: function(content) {
+            return "";
           },
           contacts: function(content) {
             const parser = new DOMParser();
@@ -1418,6 +1981,9 @@
           '<eventtime>': function() {
             return '';
           },
+          '<uriobject': function() {
+            return 'uriobject<uriobject';
+          },
           '<URIObject': function() {
             return 'uriobject<URIObject';
           },
@@ -1426,9 +1992,6 @@
           },
           '<historydisclosedupdate>': function() {
             return 'historydisclosedupdate<historydisclosedupdate>';
-          },
-          '<botsSettings>': function() {
-            return '<br>botsSettings<botsSettings>';
           },
           '<MediaAlbum': function() {
             return 'MediaAlbum<MediaAlbum';
@@ -1447,6 +2010,18 @@
           },
           '<a href=': function() {
             return '<a target=\"_blank\" href=';
+          },
+          '<attributions-group>': function() {
+            return '<attributions-group  class="attribution_text">';
+          },
+          '</attributions-group>。': function() {
+            return '</attributions-group>。<br>';
+          },
+          '<attributions-text': function() {
+            return '<span';
+          },
+          '</attributions-text>': function() {
+            return '</span>';
           },
           'isForwarded:true': function() {
             return '';
@@ -1478,16 +2053,32 @@
           var t = e.target.result;
           !function(e) {
             if (e && e.userId && e.conversations && e.exportDate) {
-              var t = new Date(e.exportDate),
-                n = e.conversations.filter(function(e) {
-                  return e.id && "ALL" !== e.id && !/@cast\.skype$/.test(e.id) && e.MessageList && e.MessageList.length;
-                });
+              var t = new Date(e.exportDate);
+              var n = e.conversations.sort((a, b) => new Date(b.properties.lastimreceivedtime ? b.properties.lastimreceivedtime : b.version)
+                                                   - new Date(a.properties.lastimreceivedtime ? a.properties.lastimreceivedtime : a.version));
+              n = e.conversations.filter(function(e) {
+                return e.id
+                    && "ALL" !== e.id
+                    && !/@cast\.skype$/.test(e.id)
+                    && e.MessageList
+                    && e.MessageList.length
+                    && e.displayName !== "File Transfer"
+                    && !e.id.includes('calllogs')
+                    && (e.displayName || e.properties.conversationstatus);
+              });
+              n.forEach(function(convo) {
+                convo.MessageList.sort((a, b) => new Date(b.originalarrivaltime) - new Date(a.originalarrivaltime));
+              });
               a("hdr-user", p(e.userId)), a("hdr-exported", formatDate(t)), a("hdr-stats", n.length + " conversations"), function(e) {
                 for (var t = document.getElementById("conversations"), n = 0; n < e.length; n++) {
                   var a = document.createElement("li");
                   a.className = "conversations";
                   var s = document.createElement("a");
-                  s.setAttribute("href", "#"), s.setAttribute("data-conv", n), s.className = "conv-link", s.textContent = c(e[n]), a.appendChild(s);
+                  s.setAttribute("href", "#"),
+                  s.setAttribute("data-conv", n),
+                  s.className = "conv-link",
+                  s.textContent = c(e[n]),
+                  a.appendChild(s);
                   var r = document.createElement("div");
                   a.appendChild(r);
                   var o = document.createElement("span");
@@ -1496,11 +2087,12 @@
                                 - e[n].MessageList.reduce((count, message) => {
                                     return count
                                          + (message.properties && message.properties.isserversidegenerated ? 1 : 0)
+                                         + (message.messagetype && message.messagetype === 'PopCard' ? 1 : 0)
                                          + (message.messagetype && message.messagetype === 'RichText/Media_Album' ? 1 : 0);
                                   }, 0)
                                 + " messages";
                   r.appendChild(o);
-                  var i = e[n].properties && e[n].properties.lastimreceivedtime ? e[n].properties.lastimreceivedtime : null;
+                  var i = e[n].properties && e[n].properties.lastimreceivedtime ? e[n].properties.lastimreceivedtime : e[n].version;
                   if (i) {
                     var l = document.createElement("span");
                     l.className = "timestamp-conv", l.textContent = "Last from: " + formatDate(i), r.appendChild(l);
@@ -1508,6 +2100,9 @@
                   t.appendChild(a);
                 }
                 for (var d = document.getElementsByClassName("conv-link"), n = 0; n < d.length; n++) d[n].addEventListener("click", m);
+                for (var li = document.querySelectorAll('li.conversations'), n = 0; n < li.length; n++) li[n].addEventListener('click', function() {
+                  this.getElementsByClassName("conv-link")[0].click();
+                });
               }(n), window.Skype = {}, window.Skype.conversations = n, s("step-1", !1), s("step-2", !0);
             } else {
               alert("Sorry, we are unable to load this file");
