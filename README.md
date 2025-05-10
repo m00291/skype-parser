@@ -27,12 +27,12 @@
 - [x] remove server side message count
 - [x] parse pictureupdate
 - [x] parse attachment
-- [ ] parse Poll
+- [x] parse Poll
 - [x] parse mp4
-- [ ] add media file path tooltip
+- [x] add media file path tip
 - [x] parse skype animated emoji
 - [x] parse emotion reaction
-- [ ] parse Bing/Copilot
+- [x] parse Bing/Copilot
 - [x] hide MediaAlbum message
 - [ ] Media Album
-- [ ] loading performance
+- [x] lazy loading
