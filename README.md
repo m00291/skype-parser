@@ -36,3 +36,4 @@
 - [x] hide MediaAlbum message
 - [ ] Media Album
 - [x] lazy loading
+- [ ] DocumentFragment
