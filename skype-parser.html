@@ -11,6 +11,12 @@
   <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 
   <style>
+    p {
+      margin: unset;
+    }
+    span img {
+      display: unset;
+    }
     #loading-all-overlay {
       position: fixed;
       top: 0;
@@ -71,14 +77,26 @@
     #load-all-button::before {
       content: '';
       position: absolute;
-      left: -80%;
-      width: 200%;
+      left: -90%;
+      width: 120%;
       height: 100%;
-      background: linear-gradient(135deg, #00000000, #ffffffa1, #00000000, #00000000, #00000000);
-      transition: all 1s ease;
+      background: linear-gradient(135deg, #00000000, #00000000, #00000000, #00000000, #ffffffa1, #00000000, #00000000, #00000000, #00000000);
+      transition: all 0.3s ease;
     }
     #load-all-button:hover::before {
-      transform: translateX(200%);
+      transform: translateX(130%);
+    }
+    #load-all-button::after {
+      content: '';
+      position: absolute;
+      left: -90%;
+      width: 120%;
+      height: 100%;
+      background: linear-gradient(135deg, #00000000, #00000000, #00000000, #00000000, #ffffffa1, #00000000, #00000000, #00000000, #00000000);
+      transition: all 1s cubic-bezier(0.65, 0.05, 0.36, 1);
+    }
+    #load-all-button:hover::after {
+      transform: translateX(130%);
     }
     a {
       word-break: break-all;
@@ -535,6 +553,7 @@
     }
     .emotions_block {
       display: flex;
+      position: absolute;
     }
     .emotions_json {
       display: none;
@@ -546,7 +565,7 @@
       height: 40px;
       background-color: white;
       border-radius: 50%;
-      position: absolute;
+      position: relative;
       display: flex;
       justify-content: center;
       align-items: center;
@@ -906,6 +925,7 @@
         'clapskypesmilie': 'clap',
         '2714_heavycheckmark': 'checkmark',
         '1f624_facewithlookoftriumph': 'facewithsteamfromnose',
+        '1f479_japaneseogre': 'ogre',
       };
 
       const normalized = shortcut.toLowerCase().trim();
@@ -1176,10 +1196,19 @@
       function m(e) {
         e.preventDefault();
         var con = e.target.parentNode;
+
+        // If already selected, do nothing
+        if (con.classList.contains("conversations-sel")) {
+          return;
+        }
+
+        // Deselect all list items
         var r = con.parentNode.getElementsByTagName("li");
         for (var o = 0; o < r.length; o++) {
           r[o].classList.remove("conversations-sel");
         }
+
+        // Select the clicked item
         con.classList.add("conversations-sel");
 
         var t = parseInt(e.target.getAttribute("data-conv"), 10);
@@ -1614,10 +1643,10 @@
             polloptions.forEach(opt => {
               const div = document.createElement('div');
               div.className = 'poll_box';
-              div.textContent = opt;
+              div.textContent = decodeURI(opt);
 
               for (var i in poll_json) {
-                if (poll_json[i].key.includes(opt)) {
+                if (poll_json[i].key.includes(decodeURI(opt))) {
                   // Tooltip
                   const tooltip = document.createElement('div');
                   tooltip.className = 'poll_tooltip';
